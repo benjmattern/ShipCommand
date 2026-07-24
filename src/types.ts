@@ -5,8 +5,11 @@ export interface DataRecord {
   raidId: string;
   source: SourceKey;
   title: string;
-  priority: 'Critical' | 'High' | 'Medium' | 'Low';
+  priority: number;
+  release?: string;
   status: string;
-  updatedAt: string;
+  customer?: string;
+  services?: string;
+  updatedAt?: string;
   summary?: string;
 }

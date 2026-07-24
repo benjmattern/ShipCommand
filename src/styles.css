@@ -60,7 +60,7 @@ button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-
 .metric-card p { margin: 0 0 2px; color: #67758a; font-size: 12px; font-weight: 600; }
 .metric-card strong { color: #172235; font-size: 25px; line-height: 1; }
 .metric-icon { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 8px; font-weight: 800; }
-.metric-icon-0 { color: #1f65cc; background: #edf5ff; }.metric-icon-1 { color: #cc3d3d; background: #fff0f0; }.metric-icon-2 { color: #a06400; background: #fff7df; }
+.metric-icon-0 { color: #1f65cc; background: #edf5ff; }.metric-icon-1 { color: #2f7a4c; background: #eaf7ee; }.metric-icon-2 { color: #a06400; background: #fff7df; }
 .board { overflow: hidden; border: 1px solid #d7e0eb; border-radius: 9px; background: white; box-shadow: 0 3px 12px rgba(28,49,79,.055); }
 .board-header { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 20px 22px; border-bottom: 1px solid #e1e7ef; }
 .board-header h2 { margin: 0; color: #172235; font-size: 17px; }.board-header p { margin: 3px 0 0; color: #738096; font-size: 12px; }
@@ -83,8 +83,10 @@ tbody tr:last-child td { border-bottom: 0; }
 .record-title { color: #263449; font-weight: 550; }
 .row-arrow { color: #8390a3; font-size: 22px; text-align: right; }
 .priority { display: inline-flex; align-items: center; padding: 4px 9px; border-radius: 999px; font-size: 11px; font-weight: 700; }
-.priority-critical { color: #b4232e; background: #fdebed; }.priority-high { color: #b85b0a; background: #fff1df; }.priority-medium { color: #1d5da8; background: #eaf3ff; }.priority-low { color: #3e7453; background: #e9f7ed; }
+.priority-number { min-width: 34px; justify-content: center; color: #1d5da8; background: #eaf3ff; }
+.release-cell { width: 140px; color: #42546d; font-weight: 600; }
 .empty-state { margin: 0; padding: 42px; color: #718096; text-align: center; }
+.error-state { color: #b4232e; background: #fff7f7; }
 .modal-backdrop { position: fixed; z-index: 20; inset: 0; display: grid; place-items: center; padding: 20px; background: rgba(15,30,50,.48); backdrop-filter: blur(2px); }
 .modal { position: relative; width: min(590px, 100%); max-height: calc(100vh - 40px); overflow-y: auto; border: 1px solid #d6dee9; border-radius: 10px; background: white; box-shadow: 0 24px 70px rgba(10,28,52,.28); animation: modal-in .18s ease-out; }
 @keyframes modal-in { from { opacity: 0; transform: translateY(8px) scale(.99); } }
