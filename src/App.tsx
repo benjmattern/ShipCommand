@@ -2,7 +2,24 @@ import { useEffect, useMemo, useState } from 'react';
 import { loadBacklogRecords } from './connectors';
 import type { DataRecord } from './types';
 
-type ModalState = { mode: 'view'; record: DataRecord } | { mode: 'create' } | null;
+type ModalState =
+  | { mode: 'view'; record: DataRecord }
+  | { mode: 'edit'; record: DataRecord }
+  | { mode: 'create' }
+  | null;
+
+const statusOptions = ['Unassigned', 'Draft', 'Solutioning', 'Financial Review', 'REQ Approved', 'In Progress', 'Blocked', 'Complete'];
+
+function normalizePriorities(items: DataRecord[]) {
+  return items.map((record, index) => ({ ...record, priority: index + 1 }));
+}
+
+function insertAtPriority(items: DataRecord[], record: DataRecord, requestedPriority: number) {
+  const withoutRecord = items.filter((item) => item.id !== record.id);
+  const targetIndex = Math.max(0, Math.min(withoutRecord.length, requestedPriority - 1));
+  withoutRecord.splice(targetIndex, 0, record);
+  return normalizePriorities(withoutRecord);
+}
 
 function App() {
   const [records, setRecords] = useState<DataRecord[]>([]);
@@ -58,30 +75,42 @@ function App() {
       if (from < 0 || to < 0) return current;
       const [moved] = next.splice(from, 1);
       next.splice(to, 0, moved);
-      return next.map((record, index) => ({ ...record, priority: index + 1 }));
+      return normalizePriorities(next);
     });
     setDraggedId(null);
   }
 
-  function createRecord(event: React.FormEvent<HTMLFormElement>) {
+  function saveRecord(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
-    const numericIds = records.map((record) => Number(record.raidId.replace(/\D/g, '')) || 100);
-    const nextId = Math.max(100, ...numericIds) + 1;
-    const newRecord: DataRecord = {
-      id: `local-${crypto.randomUUID()}`,
-      raidId: `RAID ID ${nextId}`,
+    const requestedPriority = Number(form.get('priority')) || records.length + 1;
+    const existingRecord = modal?.mode === 'edit' ? modal.record : undefined;
+    const numericIds = records
+      .map((record) => Number(record.raidId.replace(/\D/g, '')))
+      .filter((id) => Number.isFinite(id));
+    const nextId = Math.max(0, ...numericIds) + 1;
+    const savedRecord: DataRecord = {
+      id: existingRecord?.id || `local-${crypto.randomUUID()}`,
+      raidId: existingRecord?.raidId || `RAID ID ${nextId}`,
       title: String(form.get('title')),
-      priority: records.length + 1,
+      priority: requestedPriority,
       release: String(form.get('release') || '') || undefined,
-      source: 'excel',
-      status: 'Draft',
-      updatedAt: new Date().toISOString().slice(0, 10),
+      source: existingRecord?.source || 'excel',
+      status: String(form.get('status') || 'Draft'),
+      customer: String(form.get('customer') || '') || undefined,
+      services: String(form.get('services') || '') || undefined,
+      updatedAt: existingRecord?.updatedAt || new Date().toISOString().slice(0, 10),
       summary: String(form.get('summary') || ''),
     };
-    setRecords((current) => [...current, newRecord]);
+    setRecords((current) => insertAtPriority(current, savedRecord, requestedPriority));
     setSelectedRelease('all');
-    setModal({ mode: 'view', record: newRecord });
+    setModal({ mode: 'view', record: savedRecord });
+  }
+
+  function deleteRecord(record: DataRecord) {
+    if (!window.confirm(`Delete ${record.raidId}? This only affects the current local session.`)) return;
+    setRecords((current) => normalizePriorities(current.filter((item) => item.id !== record.id)));
+    setModal(null);
   }
 
   return (
@@ -147,6 +176,7 @@ function App() {
                   <th>Priority</th>
                   <th>Title</th>
                   <th>Release</th>
+                  <th>Status</th>
                   <th className="open-column"><span className="sr-only">Open</span></th>
                 </tr>
               </thead>
@@ -167,6 +197,7 @@ function App() {
                       <td><span className="priority priority-number">{record.priority}</span></td>
                       <td className="record-title">{record.title}</td>
                       <td className="release-cell">{record.release || '—'}</td>
+                      <td><span className="status-pill">{record.status}</span></td>
                       <td className="row-arrow">›</td>
                     </tr>
                   ))}
@@ -188,11 +219,8 @@ function App() {
                 <div className="modal-heading">
                   <p>{modal.record.raidId}</p>
                   <h2 id="modal-title">{modal.record.title}</h2>
-                  <span className="priority priority-number">Priority {modal.record.priority}</span>
                 </div>
                 <dl className="detail-grid">
-                  <div><dt>Status</dt><dd>{modal.record.status}</dd></div>
-                  <div><dt>Release</dt><dd>{modal.record.release || 'Not assigned'}</dd></div>
                   <div><dt>Submitted</dt><dd>{modal.record.updatedAt || 'Not recorded'}</dd></div>
                   <div><dt>Customer / Project</dt><dd>{modal.record.customer || 'Not recorded'}</dd></div>
                   <div><dt>Services</dt><dd>{modal.record.services || 'Not recorded'}</dd></div>
@@ -202,23 +230,32 @@ function App() {
                   <h3>Description</h3>
                   <p>{modal.record.summary || 'No additional details have been added.'}</p>
                 </div>
-                <div className="modal-footer"><button className="secondary-button" type="button" onClick={() => setModal(null)}>Close</button></div>
+                <div className="modal-footer modal-footer-split">
+                  <button className="danger-button" type="button" onClick={() => deleteRecord(modal.record)}>Delete</button>
+                  <div>
+                    <button className="secondary-button" type="button" onClick={() => setModal(null)}>Close</button>
+                    <button className="primary-button" type="button" onClick={() => setModal({ mode: 'edit', record: modal.record })}>Edit item</button>
+                  </div>
+                </div>
               </>
             ) : (
-              <form onSubmit={createRecord}>
+              <form onSubmit={saveRecord}>
                 <div className="modal-heading">
                   <p>RAID register</p>
-                  <h2 id="modal-title">Create a new RAID item</h2>
+                  <h2 id="modal-title">{modal.mode === 'edit' ? `Edit ${modal.record.raidId}` : 'Create a new RAID item'}</h2>
                 </div>
                 <div className="form-grid">
-                  <label className="full-field">Title<input name="title" required autoFocus placeholder="Enter a concise title" /></label>
-                  <label>Priority<input value={records.length + 1} disabled aria-label="Assigned priority" /></label>
-                  <label>Release (optional)<select name="release" defaultValue=""><option value="">Not assigned</option>{releases.map((release) => <option key={release} value={release}>{release}</option>)}</select></label>
-                  <label className="full-field">Description<textarea name="summary" rows={4} placeholder="Add context, impact, or next steps" /></label>
+                  <label className="full-field">Title<input name="title" required autoFocus defaultValue={modal.mode === 'edit' ? modal.record.title : ''} placeholder="Enter a concise title" /></label>
+                  <label>Priority<input name="priority" type="number" min="1" max={records.length + (modal.mode === 'create' ? 1 : 0)} required defaultValue={modal.mode === 'edit' ? modal.record.priority : records.length + 1} /></label>
+                  <label>Release (optional)<select name="release" defaultValue={modal.mode === 'edit' ? modal.record.release || '' : ''}><option value="">Not assigned</option>{releases.map((release) => <option key={release} value={release}>{release}</option>)}</select></label>
+                  <label>Status<select name="status" defaultValue={modal.mode === 'edit' ? modal.record.status : 'Draft'}>{Array.from(new Set([...statusOptions, ...(modal.mode === 'edit' ? [modal.record.status] : [])])).map((status) => <option key={status}>{status}</option>)}</select></label>
+                  <label>Customer / Project<input name="customer" defaultValue={modal.mode === 'edit' ? modal.record.customer : ''} placeholder="Optional" /></label>
+                  <label className="full-field">Services<input name="services" defaultValue={modal.mode === 'edit' ? modal.record.services : ''} placeholder="Optional impacted services" /></label>
+                  <label className="full-field">Description<textarea name="summary" rows={4} defaultValue={modal.mode === 'edit' ? modal.record.summary : ''} placeholder="Add context, impact, or next steps" /></label>
                 </div>
                 <div className="modal-footer">
                   <button className="secondary-button" type="button" onClick={() => setModal(null)}>Cancel</button>
-                  <button className="primary-button" type="submit">Create RAID item</button>
+                  <button className="primary-button" type="submit">{modal.mode === 'edit' ? 'Save changes' : 'Create RAID item'}</button>
                 </div>
               </form>
             )}
