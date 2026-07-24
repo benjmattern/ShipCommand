@@ -18,6 +18,11 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  background-color: #020617;
+}
+
+#root {
+  min-height: 100vh;
 }
 
 * {
