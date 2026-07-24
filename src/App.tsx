@@ -1,66 +1,128 @@
-import { useMemo, useState } from 'react';
-import { getConnectorLabels, getRecordsForSource } from './connectors';
-import type { SourceKey } from './types';
+import { useEffect, useMemo, useState } from 'react';
+import { getConnectorLabels, getInitialRecords } from './connectors';
+import type { DataRecord, SourceKey } from './types';
+
+type ModalState = { mode: 'view'; record: DataRecord } | { mode: 'create' } | null;
+
+const priorityRank: Record<DataRecord['priority'], number> = {
+  Critical: 0,
+  High: 1,
+  Medium: 2,
+  Low: 3,
+};
 
 function App() {
+  const [records, setRecords] = useState<DataRecord[]>(getInitialRecords);
   const [selectedSource, setSelectedSource] = useState<SourceKey | 'all'>('all');
+  const [modal, setModal] = useState<ModalState>(null);
+  const [draggedId, setDraggedId] = useState<string | null>(null);
+  const [sortByPriority, setSortByPriority] = useState(false);
 
-  const filteredRecords = useMemo(() => getRecordsForSource(selectedSource), [selectedSource]);
+  const filteredRecords = useMemo(() => {
+    const filtered = selectedSource === 'all' ? records : records.filter((record) => record.source === selectedSource);
+    return sortByPriority ? [...filtered].sort((a, b) => priorityRank[a.priority] - priorityRank[b.priority]) : filtered;
+  }, [records, selectedSource, sortByPriority]);
   const connectorLabels = useMemo(() => getConnectorLabels(), []);
 
   const metrics = useMemo(() => {
-    const activeSources = new Set(filteredRecords.map((record) => record.source)).size;
-    const pending = filteredRecords.filter((record) => record.status.toLowerCase() === 'draft').length;
-
     return [
-      { label: 'Signals', value: filteredRecords.length.toString(), detail: 'records in view' },
-      { label: 'Sources', value: activeSources.toString(), detail: 'active connectors' },
-      { label: 'Drafts', value: pending.toString(), detail: 'awaiting review' },
+      { label: 'Total RAID items', value: filteredRecords.length.toString() },
+      { label: 'Critical priority', value: filteredRecords.filter((record) => record.priority === 'Critical').length.toString() },
+      { label: 'Awaiting review', value: filteredRecords.filter((record) => record.status === 'Draft').length.toString() },
     ];
   }, [filteredRecords]);
 
-  return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(34,211,238,0.16),_transparent_32%),linear-gradient(135deg,_#020617_0%,_#071324_45%,_#030712_100%)] p-4 text-slate-100 sm:p-8">
-      <div className="mx-auto flex max-w-7xl flex-col gap-6">
-        <header className="rounded-[2rem] border border-cyan-400/20 bg-slate-950/70 p-6 shadow-[0_0_80px_rgba(6,182,212,0.12)] backdrop-blur-xl">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-            <div className="space-y-3">
-              <p className="text-xs uppercase tracking-[0.45em] text-cyan-300">ShipCommand / Local Ops</p>
-              <h1 className="text-3xl font-semibold text-white sm:text-4xl">Command deck</h1>
-              <p className="max-w-2xl text-sm text-slate-400 sm:text-base">
-                A local proof-of-concept cockpit for reviewing incoming data streams from Excel, SharePoint, and ServiceNow.
-              </p>
-            </div>
-            <div className="rounded-full border border-cyan-400/30 bg-cyan-400/10 px-4 py-2 text-sm text-cyan-200">
-              Mission status: local sync active
-            </div>
-          </div>
+  useEffect(() => {
+    if (!modal) return;
+    const closeOnEscape = (event: KeyboardEvent) => event.key === 'Escape' && setModal(null);
+    window.addEventListener('keydown', closeOnEscape);
+    return () => window.removeEventListener('keydown', closeOnEscape);
+  }, [modal]);
 
-          <div className="mt-6 grid gap-3 md:grid-cols-3">
-            {metrics.map((metric) => (
-              <div key={metric.label} className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
-                <p className="text-xs uppercase tracking-[0.3em] text-slate-500">{metric.label}</p>
-                <p className="mt-2 text-2xl font-semibold text-white">{metric.value}</p>
-                <p className="mt-1 text-sm text-slate-400">{metric.detail}</p>
-              </div>
-            ))}
+  function reorderRecords(targetId: string) {
+    if (!draggedId || draggedId === targetId || sortByPriority) return;
+    setRecords((current) => {
+      const next = [...current];
+      const from = next.findIndex((record) => record.id === draggedId);
+      const to = next.findIndex((record) => record.id === targetId);
+      if (from < 0 || to < 0) return current;
+      const [moved] = next.splice(from, 1);
+      next.splice(to, 0, moved);
+      return next;
+    });
+    setDraggedId(null);
+  }
+
+  function createRecord(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    const numericIds = records.map((record) => Number(record.raidId.replace(/\D/g, '')) || 100);
+    const nextId = Math.max(100, ...numericIds) + 1;
+    const source = form.get('source') as SourceKey;
+    const newRecord: DataRecord = {
+      id: `local-${crypto.randomUUID()}`,
+      raidId: `RAID ID${nextId}`,
+      title: String(form.get('title')),
+      priority: form.get('priority') as DataRecord['priority'],
+      source,
+      status: 'Draft',
+      updatedAt: new Date().toISOString().slice(0, 10),
+      summary: String(form.get('summary') || ''),
+    };
+    setRecords((current) => [...current, newRecord]);
+    setSelectedSource('all');
+    setSortByPriority(false);
+    setModal({ mode: 'view', record: newRecord });
+  }
+
+  return (
+    <div className="app-shell">
+      <aside className="sidebar">
+        <div className="brand"><span className="brand-mark">◇</span>ShipCommand</div>
+        <nav aria-label="Primary navigation">
+          <button className="nav-item active" type="button">▦ <span>RAID dashboard</span></button>
+          <button className="nav-item" type="button">□ <span>Releases</span></button>
+          <button className="nav-item" type="button">✓ <span>Approvals</span></button>
+          <button className="nav-item" type="button">⚙ <span>Settings</span></button>
+        </nav>
+        <div className="local-badge"><span /> Local data only</div>
+      </aside>
+
+      <main className="main-content">
+        <header className="page-header">
+          <div>
+            <p className="eyebrow">Release documentation tracking</p>
+            <h1>RAID dashboard</h1>
+            <p>Review and manage release risks, actions, issues, and decisions.</p>
           </div>
+          <button className="primary-button" type="button" onClick={() => setModal({ mode: 'create' })}>
+            <span>＋</span> New RAID item
+          </button>
         </header>
 
-        <section className="rounded-[2rem] border border-slate-800/80 bg-slate-900/70 p-5 shadow-[0_0_70px_rgba(2,6,23,0.45)] backdrop-blur-xl sm:p-6">
-          <div className="mb-5 flex flex-col gap-4 rounded-2xl border border-cyan-400/10 bg-slate-950/70 p-4 sm:flex-row sm:items-center sm:justify-between">
+        <section className="metric-grid" aria-label="RAID summary">
+          {metrics.map((metric, index) => (
+            <article className="metric-card" key={metric.label}>
+              <span className={`metric-icon metric-icon-${index}`}>{index === 0 ? '▦' : index === 1 ? '!' : '◷'}</span>
+              <div><p>{metric.label}</p><strong>{metric.value}</strong></div>
+            </article>
+          ))}
+        </section>
+
+        <section className="board">
+          <div className="board-header">
             <div>
-              <p className="text-sm font-medium text-slate-200">Mission board</p>
-              <p className="text-sm text-slate-400">Filter and inspect the most recent data snapshots.</p>
+              <h2>RAID register</h2>
+              <p>Drag rows to reprioritize. Select a row to view its details.</p>
             </div>
 
-            <div className="flex flex-wrap items-center gap-3">
-              <label className="text-sm text-slate-300" htmlFor="source-filter">
-                Filter by source
-              </label>
+            <div className="board-actions">
+              <button className={`secondary-button ${sortByPriority ? 'selected' : ''}`} type="button" onClick={() => setSortByPriority((value) => !value)}>
+                ↕ Priority
+              </button>
+              <label className="sr-only" htmlFor="source-filter">Filter by source</label>
               <select
                 id="source-filter"
-                className="rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 outline-none ring-0 transition focus:border-cyan-400"
                 value={selectedSource}
                 onChange={(event) => setSelectedSource(event.target.value as SourceKey | 'all')}
               >
@@ -74,44 +136,86 @@ function App() {
             </div>
           </div>
 
-          <div className="overflow-hidden rounded-2xl border border-slate-800">
-            <table className="min-w-full divide-y divide-slate-800 text-left text-sm">
-              <thead className="bg-slate-800/80 text-slate-300">
+          <div className="table-wrap">
+            <table>
+              <thead>
                 <tr>
-                  <th className="px-4 py-3 font-medium">Title</th>
-                  <th className="px-4 py-3 font-medium">Source</th>
-                  <th className="px-4 py-3 font-medium">Status</th>
-                  <th className="px-4 py-3 font-medium">Updated</th>
+                  <th className="drag-column"><span className="sr-only">Reorder</span></th>
+                  <th>RAID ID</th>
+                  <th>Priority</th>
+                  <th>Title</th>
+                  <th className="open-column"><span className="sr-only">Open</span></th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800 bg-slate-950/80">
-                {filteredRecords.map((record) => {
-                  const tone =
-                    record.status.toLowerCase() === 'draft'
-                      ? 'bg-amber-500/10 text-amber-300'
-                      : record.status.toLowerCase() === 'queued'
-                        ? 'bg-cyan-500/10 text-cyan-300'
-                        : 'bg-emerald-500/10 text-emerald-300';
-
-                  return (
-                    <tr key={record.id} className="transition hover:bg-slate-800/60">
-                      <td className="px-4 py-3">
-                        <div className="font-medium text-white">{record.title}</div>
-                        {record.summary ? <div className="mt-1 text-xs text-slate-400">{record.summary}</div> : null}
-                      </td>
-                      <td className="px-4 py-3 capitalize text-slate-300">{record.source}</td>
-                      <td className="px-4 py-3">
-                        <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${tone}`}>{record.status}</span>
-                      </td>
-                      <td className="px-4 py-3 text-slate-400">{record.updatedAt}</td>
+              <tbody>
+                {filteredRecords.map((record) => (
+                    <tr
+                      key={record.id}
+                      draggable={!sortByPriority}
+                      className={draggedId === record.id ? 'dragging' : ''}
+                      onDragStart={() => setDraggedId(record.id)}
+                      onDragEnd={() => setDraggedId(null)}
+                      onDragOver={(event) => event.preventDefault()}
+                      onDrop={() => reorderRecords(record.id)}
+                      onClick={() => setModal({ mode: 'view', record })}
+                    >
+                      <td className="drag-handle" aria-hidden="true">⠿</td>
+                      <td className="raid-id">{record.raidId}</td>
+                      <td><span className={`priority priority-${record.priority.toLowerCase()}`}>{record.priority}</span></td>
+                      <td className="record-title">{record.title}</td>
+                      <td className="row-arrow">›</td>
                     </tr>
-                  );
-                })}
+                  ))}
               </tbody>
             </table>
+            {filteredRecords.length === 0 && <p className="empty-state">No RAID items match this source.</p>}
           </div>
         </section>
-      </div>
+      </main>
+
+      {modal && (
+        <div className="modal-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setModal(null)}>
+          <section className="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+            <button className="modal-close" type="button" aria-label="Close dialog" onClick={() => setModal(null)}>×</button>
+            {modal.mode === 'view' ? (
+              <>
+                <div className="modal-heading">
+                  <p>{modal.record.raidId}</p>
+                  <h2 id="modal-title">{modal.record.title}</h2>
+                  <span className={`priority priority-${modal.record.priority.toLowerCase()}`}>{modal.record.priority} priority</span>
+                </div>
+                <dl className="detail-grid">
+                  <div><dt>Status</dt><dd>{modal.record.status}</dd></div>
+                  <div><dt>Source</dt><dd>{connectorLabels.find((item) => item.key === modal.record.source)?.label}</dd></div>
+                  <div><dt>Last updated</dt><dd>{modal.record.updatedAt}</dd></div>
+                </dl>
+                <div className="description">
+                  <h3>Description</h3>
+                  <p>{modal.record.summary || 'No additional details have been added.'}</p>
+                </div>
+                <div className="modal-footer"><button className="secondary-button" type="button" onClick={() => setModal(null)}>Close</button></div>
+              </>
+            ) : (
+              <form onSubmit={createRecord}>
+                <div className="modal-heading">
+                  <p>RAID register</p>
+                  <h2 id="modal-title">Create a new RAID item</h2>
+                </div>
+                <div className="form-grid">
+                  <label className="full-field">Title<input name="title" required autoFocus placeholder="Enter a concise title" /></label>
+                  <label>Priority<select name="priority" defaultValue="Medium"><option>Critical</option><option>High</option><option>Medium</option><option>Low</option></select></label>
+                  <label>Source<select name="source" defaultValue="excel">{connectorLabels.map((item) => <option key={item.key} value={item.key}>{item.label}</option>)}</select></label>
+                  <label className="full-field">Description<textarea name="summary" rows={4} placeholder="Add context, impact, or next steps" /></label>
+                </div>
+                <div className="modal-footer">
+                  <button className="secondary-button" type="button" onClick={() => setModal(null)}>Cancel</button>
+                  <button className="primary-button" type="submit">Create RAID item</button>
+                </div>
+              </form>
+            )}
+          </section>
+        </div>
+      )}
     </div>
   );
 }
