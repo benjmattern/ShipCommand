@@ -9,7 +9,8 @@ export interface DataRecord {
   release?: string;
   status: string;
   customer?: string;
-  services?: string;
+  impactedMicroserviceIds: string[];
+  unknownServiceLabels?: string[];
   updatedAt?: string;
   summary?: string;
 }

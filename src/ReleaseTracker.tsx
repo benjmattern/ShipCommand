@@ -53,7 +53,14 @@ export function ReleaseTracker({ records, loadState, onOpenRecord }: ReleaseTrac
                     <td className="record-title">{feature.title}</td>
                     <td><span className="status-pill">{feature.status}</span></td>
                     <td>{feature.customerProject || '—'}</td>
-                    <td>{feature.services?.join(', ') || '—'}</td>
+                    <td>
+                      {feature.microserviceNames.length
+                        ? feature.microserviceNames.join(', ')
+                        : 'Not identified.'}
+                      {feature.unknownServiceLabels.length > 0 && (
+                        <span className="unmapped-inline">Unmapped: {feature.unknownServiceLabels.join(', ')}</span>
+                      )}
+                    </td>
                     <td className="row-arrow">›</td>
                   </tr>
                 );

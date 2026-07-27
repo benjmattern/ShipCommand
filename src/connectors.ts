@@ -1,6 +1,7 @@
 import * as XLSX from 'xlsx';
 import backlogWorkbookUrl from './data/BacklogData.xlsx?url';
 import { formatRaidId } from './raid';
+import { normalizeServiceValues } from './microservices';
 import type { DataRecord, SourceKey } from './types';
 
 type WorkbookRow = Record<string, string | number | undefined>;
@@ -25,6 +26,7 @@ export async function loadBacklogRecords(): Promise<DataRecord[]> {
     .sort((a, b) => (Number(a['Priority #']) || Number.MAX_SAFE_INTEGER) - (Number(b['Priority #']) || Number.MAX_SAFE_INTEGER))
     .map((row, index) => {
       const fixedId = String(row.ID || `LOCAL-${index + 1}`).trim();
+      const normalizedServices = normalizeServiceValues(String(row['Service(s)'] || ''));
       return {
         id: `excel-${fixedId}`,
         raidId: formatRaidId(fixedId),
@@ -34,7 +36,8 @@ export async function loadBacklogRecords(): Promise<DataRecord[]> {
         release: String(row.Release || '').trim() || undefined,
         status: String(row.Status || 'Unassigned').trim(),
         customer: String(row['Customer / Project'] || '').trim() || undefined,
-        services: String(row['Service(s)'] || '').trim() || undefined,
+        impactedMicroserviceIds: normalizedServices.microserviceIds,
+        unknownServiceLabels: normalizedServices.unknownLabels.length ? normalizedServices.unknownLabels : undefined,
         updatedAt: excelDate(row['Date of Submission']),
         summary: String(row['Description\r\nIT Notes/Comments'] || '').trim() || undefined,
       };

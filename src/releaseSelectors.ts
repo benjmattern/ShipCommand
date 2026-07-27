@@ -1,4 +1,5 @@
 import type { DataRecord } from './types';
+import { getMicroserviceNames } from './microservices';
 
 export interface ReleaseFeature {
   raidItemId: string;
@@ -7,7 +8,8 @@ export interface ReleaseFeature {
   priority: number;
   status: string;
   customerProject?: string;
-  services?: string[];
+  microserviceNames: string[];
+  unknownServiceLabels: string[];
 }
 
 export interface ReleaseSummary {
@@ -33,10 +35,8 @@ export function selectReleaseFeatures(records: DataRecord[]): ReleaseFeature[] {
       priority: record.priority,
       status: record.status,
       customerProject: record.customer,
-      services: record.services
-        ?.split(',')
-        .map((service) => service.trim())
-        .filter(Boolean),
+      microserviceNames: getMicroserviceNames(record.impactedMicroserviceIds),
+      unknownServiceLabels: record.unknownServiceLabels ?? [],
     }));
 }
 

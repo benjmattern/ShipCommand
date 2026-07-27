@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { loadBacklogRecords } from './connectors';
 import { formatRaidId } from './raid';
 import { ReleaseTracker } from './ReleaseTracker';
+import { getMicroserviceNames, microservices } from './microservices';
 import type { DataRecord } from './types';
 
 type ModalState =
@@ -101,7 +102,8 @@ function App() {
       source: existingRecord?.source || 'excel',
       status: String(form.get('status') || 'Draft'),
       customer: String(form.get('customer') || '') || undefined,
-      services: String(form.get('services') || '') || undefined,
+      impactedMicroserviceIds: form.getAll('microserviceIds').map(String),
+      unknownServiceLabels: existingRecord?.unknownServiceLabels,
       updatedAt: existingRecord?.updatedAt || new Date().toISOString().slice(0, 10),
       summary: String(form.get('summary') || ''),
     };
@@ -232,9 +234,22 @@ function App() {
                 <dl className="detail-grid">
                   <div><dt>Submitted</dt><dd>{modal.record.updatedAt || 'Not recorded'}</dd></div>
                   <div><dt>Customer / Project</dt><dd>{modal.record.customer || 'Not recorded'}</dd></div>
-                  <div><dt>Services</dt><dd>{modal.record.services || 'Not recorded'}</dd></div>
                   <div><dt>Data source</dt><dd>BacklogData.xlsx</dd></div>
                 </dl>
+                <div className="service-detail">
+                  <h3>Impacted microservices</h3>
+                  {modal.record.impactedMicroserviceIds.length ? (
+                    <div className="service-badges">
+                      {getMicroserviceNames(modal.record.impactedMicroserviceIds).map((name) => <span key={name}>{name}</span>)}
+                    </div>
+                  ) : <p>No impacted microservices identified.</p>}
+                  {modal.record.unknownServiceLabels?.length ? (
+                    <div className="unmapped-services">
+                      <strong>Unmapped workbook values</strong>
+                      <p>{modal.record.unknownServiceLabels.join(', ')}</p>
+                    </div>
+                  ) : null}
+                </div>
                 <div className="description">
                   <h3>Description</h3>
                   <p>{modal.record.summary || 'No additional details have been added.'}</p>
@@ -259,7 +274,29 @@ function App() {
                   <label>Release (optional)<select name="release" defaultValue={modal.mode === 'edit' ? modal.record.release || '' : ''}><option value="">Not assigned</option>{releases.map((release) => <option key={release} value={release}>{release}</option>)}</select></label>
                   <label>Status<select name="status" defaultValue={modal.mode === 'edit' ? modal.record.status : 'Draft'}>{Array.from(new Set([...statusOptions, ...(modal.mode === 'edit' ? [modal.record.status] : [])])).map((status) => <option key={status}>{status}</option>)}</select></label>
                   <label>Customer / Project<input name="customer" defaultValue={modal.mode === 'edit' ? modal.record.customer : ''} placeholder="Optional" /></label>
-                  <label className="full-field">Services<input name="services" defaultValue={modal.mode === 'edit' ? modal.record.services : ''} placeholder="Optional impacted services" /></label>
+                  <fieldset className="full-field service-fieldset">
+                    <legend>Impacted microservices</legend>
+                    <p>Select any services affected by this RAID item.</p>
+                    <div className="service-options">
+                      {microservices.map((service) => (
+                        <label key={service.id}>
+                          <input
+                            type="checkbox"
+                            name="microserviceIds"
+                            value={service.id}
+                            defaultChecked={modal.mode === 'edit' && modal.record.impactedMicroserviceIds.includes(service.id)}
+                          />
+                          <span>{service.name}</span>
+                        </label>
+                      ))}
+                    </div>
+                    {modal.mode === 'edit' && modal.record.unknownServiceLabels?.length ? (
+                      <div className="unmapped-services form-unmapped">
+                        <strong>Preserved unmapped workbook values</strong>
+                        <p>{modal.record.unknownServiceLabels.join(', ')}</p>
+                      </div>
+                    ) : null}
+                  </fieldset>
                   <label className="full-field">Description<textarea name="summary" rows={4} defaultValue={modal.mode === 'edit' ? modal.record.summary : ''} placeholder="Add context, impact, or next steps" /></label>
                 </div>
                 <div className="modal-footer">
