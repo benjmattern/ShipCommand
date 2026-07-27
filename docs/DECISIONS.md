@@ -22,6 +22,7 @@
 - Release phase filtering is local UI state and uses per-RAID phase rollups.
 - The initial Needs Attention summary reports blocked phases without speculative risk scoring.
 - Release-card active-phase counts include countable Not Started and In Progress phases; blocked and complete phases are reported separately.
+- Release overview uses a compact list rather than cards and sorts numeric release segments descending. `Rx.x.x` is always first.
 - Phase due dates, dependencies, notifications, and progress history are deferred.
 - Release reassignment moves the item to the selected release for the MVP.
 - True file attachments are deferred; links will be supported first.

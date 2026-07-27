@@ -6,6 +6,7 @@ import { calculateRaidProgress, calculateReleaseProgress, calculateServiceProgre
 import { getProgressStatusName } from './progressStatuses';
 import { selectReleasePhaseRollups, summarizePhaseCompletion } from './releasePhaseSelectors';
 import { normalizeServiceAssignments } from './serviceAssignments';
+import { compareReleaseValuesDescending } from './releaseSorting';
 
 export interface ReleaseFeature {
   raidItemId: string;
@@ -90,5 +91,5 @@ export function selectReleaseSummaries(records: DataRecord[]): ReleaseSummary[] 
       progressPercent: calculateReleaseProgress(records.filter((record) => record.release?.trim() === summary.name)).percentComplete,
       phaseSummary: summarizePhaseCompletion(selectReleasePhaseRollups(records, summary.name)),
     }))
-    .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
+    .sort((a, b) => compareReleaseValuesDescending(a.name, b.name));
 }

@@ -10,4 +10,6 @@ Service, RAID, and release progress are derived in memory. Not Applicable phases
 
 Release detail includes a seven-phase summary derived from RAID service-phase progress. Selecting a phase filters the release feature list and displays per-RAID phase rollups. The attention summary currently identifies blocked phases only.
 
+The release overview uses a compact metric list in descending semantic release order. `Rx.x.x` is always listed before numeric releases; release detail and derived progress behavior are unchanged.
+
 Not yet implemented: persistence, ServiceNow integration, a full release phase matrix, phase due dates or dependencies, progress history, RAID splitting, attachments, or configurable Settings lists.
