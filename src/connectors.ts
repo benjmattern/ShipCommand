@@ -1,5 +1,6 @@
 import * as XLSX from 'xlsx';
 import backlogWorkbookUrl from './data/BacklogData.xlsx?url';
+import { formatRaidId } from './raid';
 import type { DataRecord, SourceKey } from './types';
 
 type WorkbookRow = Record<string, string | number | undefined>;
@@ -26,7 +27,7 @@ export async function loadBacklogRecords(): Promise<DataRecord[]> {
       const fixedId = String(row.ID || `LOCAL-${index + 1}`).trim();
       return {
         id: `excel-${fixedId}`,
-        raidId: `RAID ID ${fixedId}`,
+        raidId: formatRaidId(fixedId),
         source: 'excel',
         title: String(row.Feature || 'Untitled RAID item').trim(),
         priority: index + 1,

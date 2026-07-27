@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { loadBacklogRecords } from './connectors';
+import { formatRaidId } from './raid';
+import { ReleaseTracker } from './ReleaseTracker';
 import type { DataRecord } from './types';
 
 type ModalState =
@@ -23,6 +25,7 @@ function insertAtPriority(items: DataRecord[], record: DataRecord, requestedPrio
 
 function App() {
   const [records, setRecords] = useState<DataRecord[]>([]);
+  const [activeView, setActiveView] = useState<'raid' | 'releases'>('raid');
   const [selectedRelease, setSelectedRelease] = useState('all');
   const [modal, setModal] = useState<ModalState>(null);
   const [draggedId, setDraggedId] = useState<string | null>(null);
@@ -91,7 +94,7 @@ function App() {
     const nextId = Math.max(0, ...numericIds) + 1;
     const savedRecord: DataRecord = {
       id: existingRecord?.id || `local-${crypto.randomUUID()}`,
-      raidId: existingRecord?.raidId || `RAID ID ${nextId}`,
+      raidId: existingRecord?.raidId || formatRaidId(nextId),
       title: String(form.get('title')),
       priority: requestedPriority,
       release: String(form.get('release') || '') || undefined,
@@ -108,7 +111,7 @@ function App() {
   }
 
   function deleteRecord(record: DataRecord) {
-    if (!window.confirm(`Delete ${record.raidId}? This only affects the current local session.`)) return;
+    if (!window.confirm(`Delete ${formatRaidId(record.raidId)}? This only affects the current local session.`)) return;
     setRecords((current) => normalizePriorities(current.filter((item) => item.id !== record.id)));
     setModal(null);
   }
@@ -118,10 +121,10 @@ function App() {
       <aside className="sidebar">
         <div className="brand"><span className="brand-mark">◇</span>ShipCommand</div>
         <nav aria-label="Primary navigation">
-          <button className="nav-item active" type="button">▦ <span>RAID dashboard</span></button>
-          <button className="nav-item" type="button">□ <span>Releases</span></button>
-          <button className="nav-item" type="button">✓ <span>Approvals</span></button>
-          <button className="nav-item" type="button">⚙ <span>Settings</span></button>
+          <button className={`nav-item ${activeView === 'raid' ? 'active' : ''}`} type="button" onClick={() => setActiveView('raid')}>▦ <span>RAID dashboard</span></button>
+          <button className={`nav-item ${activeView === 'releases' ? 'active' : ''}`} type="button" onClick={() => setActiveView('releases')}>□ <span>Releases</span></button>
+          <button className="nav-item" type="button" disabled>✓ <span>Approvals</span></button>
+          <button className="nav-item" type="button" disabled>⚙ <span>Settings</span></button>
         </nav>
         <div className="local-badge"><span /> Local data only</div>
       </aside>
@@ -130,14 +133,17 @@ function App() {
         <header className="page-header">
           <div>
             <p className="eyebrow">Release documentation tracking</p>
-            <h1>RAID dashboard</h1>
-            <p>Review and manage release risks, actions, issues, and decisions.</p>
+            <h1>{activeView === 'raid' ? 'RAID dashboard' : 'Release tracker'}</h1>
+            <p>{activeView === 'raid'
+              ? 'Review and manage release risks, actions, issues, and decisions.'
+              : 'Explore release features derived directly from the current RAID register.'}</p>
           </div>
-          <button className="primary-button" type="button" onClick={() => setModal({ mode: 'create' })}>
+          {activeView === 'raid' && <button className="primary-button" type="button" onClick={() => setModal({ mode: 'create' })}>
             <span>＋</span> New RAID item
-          </button>
+          </button>}
         </header>
 
+        {activeView === 'raid' ? <>
         <section className="metric-grid" aria-label="RAID summary">
           {metrics.map((metric, index) => (
             <article className="metric-card" key={metric.label}>
@@ -193,7 +199,7 @@ function App() {
                       onClick={() => setModal({ mode: 'view', record })}
                     >
                       <td className="drag-handle" aria-hidden="true">⠿</td>
-                      <td className="raid-id">{record.raidId}</td>
+                      <td className="raid-id">{formatRaidId(record.raidId)}</td>
                       <td><span className="priority priority-number">{record.priority}</span></td>
                       <td className="record-title">{record.title}</td>
                       <td className="release-cell">{record.release || '—'}</td>
@@ -208,6 +214,9 @@ function App() {
             {loadState === 'ready' && filteredRecords.length === 0 && <p className="empty-state">No RAID items match this release.</p>}
           </div>
         </section>
+        </> : (
+          <ReleaseTracker records={records} loadState={loadState} onOpenRecord={(record) => setModal({ mode: 'view', record })} />
+        )}
       </main>
 
       {modal && (
@@ -217,7 +226,7 @@ function App() {
             {modal.mode === 'view' ? (
               <>
                 <div className="modal-heading">
-                  <p>{modal.record.raidId}</p>
+                  <p>{formatRaidId(modal.record.raidId)}</p>
                   <h2 id="modal-title">{modal.record.title}</h2>
                 </div>
                 <dl className="detail-grid">
@@ -242,7 +251,7 @@ function App() {
               <form onSubmit={saveRecord}>
                 <div className="modal-heading">
                   <p>RAID register</p>
-                  <h2 id="modal-title">{modal.mode === 'edit' ? `Edit ${modal.record.raidId}` : 'Create a new RAID item'}</h2>
+                  <h2 id="modal-title">{modal.mode === 'edit' ? `Edit ${formatRaidId(modal.record.raidId)}` : 'Create a new RAID item'}</h2>
                 </div>
                 <div className="form-grid">
                   <label className="full-field">Title<input name="title" required autoFocus defaultValue={modal.mode === 'edit' ? modal.record.title : ''} placeholder="Enter a concise title" /></label>
