@@ -12,7 +12,12 @@
 - Full Delivery is the default imported assignment. Explicit test-only aliases use Testing Support.
 - CAT Ready and CAT Execution remain distinct, independently selectable phases.
 - Settings-based reference-data management is deferred.
-- Phase status, percent complete, and progress records are deferred.
+- `phaseProgress` is stored within each service assignment; the trackable unit is RAID + microservice + phase.
+- Progress combines a controlled status, an integer percentage, and an optional note.
+- Complete equals 100%; Not Started equals 0%; Blocked may retain partial progress.
+- Not Applicable phases are excluded from service, RAID, and release rollups.
+- Service, RAID, and release progress are derived. Release views contain no duplicate mutable progress state.
+- The full release phase matrix remains deferred.
 - Release reassignment moves the item to the selected release for the MVP.
 - True file attachments are deferred; links will be supported first.
 - RAID item splitting is deferred.

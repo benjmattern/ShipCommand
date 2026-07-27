@@ -2,6 +2,8 @@ import type { DataRecord } from './types';
 import { getInvolvementTypeName } from './involvementTypes';
 import { getMicroserviceName } from './microservices';
 import { getPhaseNames } from './phases';
+import { calculateRaidProgress, calculateReleaseProgress, calculateServiceProgress } from './phaseProgress';
+import { getProgressStatusName } from './progressStatuses';
 import { normalizeServiceAssignments } from './serviceAssignments';
 
 export interface ReleaseFeature {
@@ -15,7 +17,10 @@ export interface ReleaseFeature {
     microserviceName: string;
     involvementTypeName: string;
     phaseNames: string[];
+    progressPercent: number | null;
+    progressStatusName: string;
   }>;
+  progressPercent: number | null;
   unknownServiceLabels: string[];
 }
 
@@ -24,6 +29,7 @@ export interface ReleaseSummary {
   featureCount: number;
   completedCount: number;
   remainingCount: number;
+  progressPercent: number | null;
 }
 
 const completedStatuses = new Set(['complete', 'completed', 'done']);
@@ -42,11 +48,17 @@ export function selectReleaseFeatures(records: DataRecord[]): ReleaseFeature[] {
       priority: record.priority,
       status: record.status,
       customerProject: record.customer,
-      serviceAssignments: normalizeServiceAssignments(record.serviceAssignments).map((assignment) => ({
-        microserviceName: getMicroserviceName(assignment.microserviceId) ?? 'Unknown service',
-        involvementTypeName: getInvolvementTypeName(assignment.involvementTypeId),
-        phaseNames: getPhaseNames(assignment.applicablePhaseIds),
-      })),
+      serviceAssignments: normalizeServiceAssignments(record.serviceAssignments).map((assignment) => {
+        const rollup = calculateServiceProgress(assignment);
+        return {
+          microserviceName: getMicroserviceName(assignment.microserviceId) ?? 'Unknown service',
+          involvementTypeName: getInvolvementTypeName(assignment.involvementTypeId),
+          phaseNames: getPhaseNames(assignment.applicablePhaseIds),
+          progressPercent: rollup.percentComplete,
+          progressStatusName: rollup.percentComplete === null ? 'N/A' : getProgressStatusName(rollup.statusId),
+        };
+      }),
+      progressPercent: calculateRaidProgress(record.serviceAssignments).percentComplete,
       unknownServiceLabels: record.unknownServiceLabels ?? [],
     }));
 }
@@ -61,6 +73,7 @@ export function selectReleaseSummaries(records: DataRecord[]): ReleaseSummary[] 
       featureCount: 0,
       completedCount: 0,
       remainingCount: 0,
+      progressPercent: null,
     };
     current.featureCount += 1;
     if (isCompletedStatus(feature.status)) current.completedCount += 1;
@@ -68,5 +81,10 @@ export function selectReleaseSummaries(records: DataRecord[]): ReleaseSummary[] 
     summaries.set(feature.release, current);
   });
 
-  return Array.from(summaries.values()).sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
+  return Array.from(summaries.values())
+    .map((summary) => ({
+      ...summary,
+      progressPercent: calculateReleaseProgress(records.filter((record) => record.release?.trim() === summary.name)).percentComplete,
+    }))
+    .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
 }

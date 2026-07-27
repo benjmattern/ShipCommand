@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { applyDefaultPhases, involvementTypes } from './involvementTypes';
 import { microservices } from './microservices';
 import { deliveryPhases, normalizePhaseIds } from './phases';
+import { getOrderedPhaseProgress, reconcilePhaseProgress, updatePhaseProgressPercent, updatePhaseProgressStatus } from './phaseProgress';
+import { progressStatuses } from './progressStatuses';
 import { createDefaultServiceAssignment, normalizeServiceAssignments } from './serviceAssignments';
 import type { ServiceAssignment } from './types';
 
@@ -12,6 +14,7 @@ interface ServiceAssignmentEditorProps {
 
 export function ServiceAssignmentEditor({ initialAssignments, unknownLabels }: ServiceAssignmentEditorProps) {
   const [assignments, setAssignments] = useState(() => normalizeServiceAssignments(initialAssignments));
+  const [expandedServices, setExpandedServices] = useState<Set<string>>(() => new Set());
 
   function toggleService(microserviceId: string, selected: boolean) {
     setAssignments((current) => selected
@@ -20,9 +23,16 @@ export function ServiceAssignmentEditor({ initialAssignments, unknownLabels }: S
   }
 
   function changeInvolvement(microserviceId: string, involvementTypeId: string) {
-    setAssignments((current) => current.map((assignment) => assignment.microserviceId === microserviceId
-      ? { ...assignment, involvementTypeId, applicablePhaseIds: applyDefaultPhases(involvementTypeId) }
-      : assignment));
+    setAssignments((current) => current.map((assignment) => {
+      if (assignment.microserviceId !== microserviceId) return assignment;
+      const applicablePhaseIds = applyDefaultPhases(involvementTypeId);
+      return {
+        ...assignment,
+        involvementTypeId,
+        applicablePhaseIds,
+        phaseProgress: reconcilePhaseProgress(applicablePhaseIds, assignment.phaseProgress),
+      };
+    }));
   }
 
   function togglePhase(microserviceId: string, phaseId: string, selected: boolean) {
@@ -31,8 +41,35 @@ export function ServiceAssignmentEditor({ initialAssignments, unknownLabels }: S
       const phaseIds = selected
         ? [...assignment.applicablePhaseIds, phaseId]
         : assignment.applicablePhaseIds.filter((id) => id !== phaseId);
-      return { ...assignment, applicablePhaseIds: normalizePhaseIds(phaseIds) };
+      const applicablePhaseIds = normalizePhaseIds(phaseIds);
+      return {
+        ...assignment,
+        applicablePhaseIds,
+        phaseProgress: reconcilePhaseProgress(applicablePhaseIds, assignment.phaseProgress),
+      };
     }));
+  }
+
+  function updateProgress(
+    microserviceId: string,
+    phaseId: string,
+    update: (progress: ServiceAssignment['phaseProgress'][number]) => ServiceAssignment['phaseProgress'][number],
+  ) {
+    setAssignments((current) => current.map((assignment) => assignment.microserviceId === microserviceId
+      ? {
+        ...assignment,
+        phaseProgress: getOrderedPhaseProgress(assignment).map((progress) => progress.phaseId === phaseId ? update(progress) : progress),
+      }
+      : assignment));
+  }
+
+  function toggleExpanded(microserviceId: string) {
+    setExpandedServices((current) => {
+      const next = new Set(current);
+      if (next.has(microserviceId)) next.delete(microserviceId);
+      else next.add(microserviceId);
+      return next;
+    });
   }
 
   return (
@@ -55,6 +92,8 @@ export function ServiceAssignmentEditor({ initialAssignments, unknownLabels }: S
         <div className="assignment-editor-list">
           {assignments.map((assignment) => {
             const service = microservices.find((item) => item.id === assignment.microserviceId);
+            const orderedProgress = getOrderedPhaseProgress(assignment);
+            const expanded = expandedServices.has(assignment.microserviceId);
             return (
               <article className="assignment-editor" key={assignment.microserviceId}>
                 <div className="assignment-editor-heading">
@@ -83,6 +122,71 @@ export function ServiceAssignmentEditor({ initialAssignments, unknownLabels }: S
                   ))}
                 </div>
                 {assignment.applicablePhaseIds.length === 0 && <p className="phase-warning">No phases selected.</p>}
+                {orderedProgress.map((progress) => (
+                  <span key={progress.phaseId}>
+                    <input type="hidden" name={`progressStatus:${assignment.microserviceId}:${progress.phaseId}`} value={progress.statusId} />
+                    <input type="hidden" name={`progressPercent:${assignment.microserviceId}:${progress.phaseId}`} value={progress.percentComplete} />
+                    <input type="hidden" name={`progressNote:${assignment.microserviceId}:${progress.phaseId}`} value={progress.note ?? ''} />
+                  </span>
+                ))}
+                {orderedProgress.length > 0 && (
+                  <>
+                    <button className="progress-toggle" type="button" onClick={() => toggleExpanded(assignment.microserviceId)}>
+                      {expanded ? 'Hide phase progress' : `Edit phase progress (${orderedProgress.length})`}
+                    </button>
+                    {expanded && (
+                      <div className="progress-editor-list">
+                        {orderedProgress.map((progress) => {
+                          const phase = deliveryPhases.find((item) => item.id === progress.phaseId);
+                          return (
+                            <div className="progress-editor" key={progress.phaseId}>
+                              <strong>{phase?.name ?? progress.phaseId}</strong>
+                              <select
+                                value={progress.statusId}
+                                onChange={(event) => updateProgress(
+                                  assignment.microserviceId,
+                                  progress.phaseId,
+                                  (current) => updatePhaseProgressStatus(current, event.target.value),
+                                )}
+                                aria-label={`${phase?.name} status`}
+                              >
+                                {progressStatuses.filter((status) => status.active).map((status) => <option key={status.id} value={status.id}>{status.name}</option>)}
+                              </select>
+                              <label>
+                                <span>Percent</span>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  max="100"
+                                  value={progress.percentComplete}
+                                  onChange={(event) => updateProgress(
+                                    assignment.microserviceId,
+                                    progress.phaseId,
+                                    (current) => updatePhaseProgressPercent(current, Number(event.target.value)),
+                                  )}
+                                />
+                              </label>
+                              <label className="progress-note">
+                                <span>Note</span>
+                                <input
+                                  type="text"
+                                  maxLength={160}
+                                  value={progress.note ?? ''}
+                                  placeholder="Optional note"
+                                  onChange={(event) => updateProgress(
+                                    assignment.microserviceId,
+                                    progress.phaseId,
+                                    (current) => ({ ...current, note: event.target.value }),
+                                  )}
+                                />
+                              </label>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </>
+                )}
               </article>
             );
           })}

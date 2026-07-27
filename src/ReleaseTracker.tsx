@@ -40,6 +40,7 @@ export function ReleaseTracker({ records, loadState, onOpenRecord }: ReleaseTrac
                 <th>Status</th>
                 <th>Customer / Project</th>
                 <th>Services</th>
+                <th>Progress</th>
                 <th className="open-column"><span className="sr-only">Open</span></th>
               </tr>
             </thead>
@@ -57,7 +58,7 @@ export function ReleaseTracker({ records, loadState, onOpenRecord }: ReleaseTrac
                       {feature.serviceAssignments.length
                         ? feature.serviceAssignments.map((assignment) => (
                           <span key={assignment.microserviceName} title={assignment.phaseNames.join(', ') || 'No phases selected'}>
-                            <strong>{assignment.microserviceName}</strong> — {assignment.involvementTypeName}
+                            <strong>{assignment.microserviceName}</strong> — {assignment.involvementTypeName} — {assignment.progressStatusName}{assignment.progressPercent === null ? '' : ` · ${assignment.progressPercent}%`}
                           </span>
                         ))
                         : 'Not identified.'}
@@ -65,6 +66,7 @@ export function ReleaseTracker({ records, loadState, onOpenRecord }: ReleaseTrac
                         <span className="unmapped-inline">Unmapped: {feature.unknownServiceLabels.join(', ')}</span>
                       )}
                     </td>
+                    <td className="progress-cell">{feature.progressPercent === null ? 'N/A' : `${feature.progressPercent}%`}</td>
                     <td className="row-arrow">›</td>
                   </tr>
                 );
@@ -95,6 +97,10 @@ export function ReleaseTracker({ records, loadState, onOpenRecord }: ReleaseTrac
                 <span><strong>{release.featureCount}</strong> Features</span>
                 <span><strong>{release.completedCount}</strong> Complete</span>
                 <span><strong>{release.remainingCount}</strong> Remaining</span>
+              </div>
+              <div className="release-progress">
+                <span>Derived progress</span>
+                <strong>{release.progressPercent === null ? 'N/A' : `${release.progressPercent}%`}</strong>
               </div>
               <span className="release-open">View release <b>→</b></span>
             </button>

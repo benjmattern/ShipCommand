@@ -4,6 +4,8 @@ ShipCommand is a local React, TypeScript, and Vite proof-of-concept. `BacklogDat
 
 The Releases view derives release summaries and feature lists from the same live RAID state, so RAID create, edit, delete, release reassignment, and service-assignment changes are reflected immediately. RAID items store service assignments containing a stable microservice ID, involvement type ID, and applicable phase IDs. Refreshing the browser restores workbook data.
 
-The seven delivery phases and four involvement types are controlled reference data. They currently describe applicability only; phase status, percent complete, and progress records are not implemented.
+The seven delivery phases, four involvement types, and five progress statuses are controlled reference data. Each applicable RAID + microservice + phase stores a progress status, percent complete, and optional note inside its service assignment.
 
-Not yet implemented: persistence, ServiceNow integration, phase progress, RAID splitting, attachments, or configurable Settings lists.
+Service, RAID, and release progress are derived in memory. Not Applicable phases are excluded from rollups.
+
+Not yet implemented: persistence, ServiceNow integration, a full release phase matrix, progress history, RAID splitting, attachments, or configurable Settings lists.

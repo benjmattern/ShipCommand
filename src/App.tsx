@@ -4,7 +4,9 @@ import { formatRaidId } from './raid';
 import { ReleaseTracker } from './ReleaseTracker';
 import { getInvolvementTypeName } from './involvementTypes';
 import { getMicroserviceName, microservices } from './microservices';
+import { calculateRaidProgress, getOrderedPhaseProgress } from './phaseProgress';
 import { getPhaseNames } from './phases';
+import { getProgressStatusName } from './progressStatuses';
 import { ServiceAssignmentEditor } from './ServiceAssignmentEditor';
 import { normalizeServiceAssignments } from './serviceAssignments';
 import type { DataRecord, ServiceAssignment } from './types';
@@ -104,6 +106,12 @@ function App() {
         microserviceId: service.id,
         involvementTypeId: String(involvementTypeId),
         applicablePhaseIds: form.getAll(`assignmentPhases:${service.id}`).map(String),
+        phaseProgress: form.getAll(`assignmentPhases:${service.id}`).map((phaseId) => ({
+          phaseId: String(phaseId),
+          statusId: String(form.get(`progressStatus:${service.id}:${phaseId}`) || 'not-started'),
+          percentComplete: Number(form.get(`progressPercent:${service.id}:${phaseId}`)) || 0,
+          note: String(form.get(`progressNote:${service.id}:${phaseId}`) || '') || undefined,
+        })),
       }];
     });
     const savedRecord: DataRecord = {
@@ -250,7 +258,13 @@ function App() {
                   <div><dt>Data source</dt><dd>BacklogData.xlsx</dd></div>
                 </dl>
                 <div className="service-detail">
-                  <h3>Impacted microservices</h3>
+                  <div className="service-detail-heading">
+                    <h3>Impacted microservices</h3>
+                    {(() => {
+                      const rollup = calculateRaidProgress(modal.record.serviceAssignments);
+                      return <span>{rollup.percentComplete === null ? 'Progress N/A' : `Overall progress ${rollup.percentComplete}%`}</span>;
+                    })()}
+                  </div>
                   {modal.record.serviceAssignments.length ? (
                     <div className="assignment-summary-list">
                       {normalizeServiceAssignments(modal.record.serviceAssignments).map((assignment) => (
@@ -259,7 +273,17 @@ function App() {
                             <strong>{getMicroserviceName(assignment.microserviceId) ?? 'Unknown service'}</strong>
                             <span>{getInvolvementTypeName(assignment.involvementTypeId)}</span>
                           </div>
-                          <p>{getPhaseNames(assignment.applicablePhaseIds).join(', ') || 'No phases selected.'}</p>
+                          {getOrderedPhaseProgress(assignment).length ? (
+                            <div className="phase-progress-summary">
+                              {getOrderedPhaseProgress(assignment).map((progress) => (
+                                <div key={progress.phaseId}>
+                                  <span>{getPhaseNames([progress.phaseId])[0]}</span>
+                                  <strong>{getProgressStatusName(progress.statusId)}, {progress.percentComplete}%</strong>
+                                  {progress.note && <p>{progress.note}</p>}
+                                </div>
+                              ))}
+                            </div>
+                          ) : <p>No phases selected.</p>}
                         </article>
                       ))}
                     </div>

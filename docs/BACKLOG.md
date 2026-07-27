@@ -2,7 +2,7 @@
 
 ## Next
 
-- Add phase status and percent-complete progress records for Requirements, DEV/Unit Testing, SIT, E2E, Regression, CAT Ready, and CAT Execution.
+- Add progress history and audit events after durable persistence exists.
 - Add a separate ServiceNow release export source.
 
 ## Deferred

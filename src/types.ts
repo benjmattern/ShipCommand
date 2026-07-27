@@ -1,9 +1,17 @@
 export type SourceKey = 'excel' | 'sharepoint' | 'servicenow';
 
+export interface PhaseProgress {
+  phaseId: string;
+  statusId: string;
+  percentComplete: number;
+  note?: string;
+}
+
 export interface ServiceAssignment {
   microserviceId: string;
   involvementTypeId: string;
   applicablePhaseIds: string[];
+  phaseProgress: PhaseProgress[];
 }
 
 export interface DataRecord {
