@@ -1,5 +1,8 @@
 import type { DataRecord } from './types';
-import { getMicroserviceNames } from './microservices';
+import { getInvolvementTypeName } from './involvementTypes';
+import { getMicroserviceName } from './microservices';
+import { getPhaseNames } from './phases';
+import { normalizeServiceAssignments } from './serviceAssignments';
 
 export interface ReleaseFeature {
   raidItemId: string;
@@ -8,7 +11,11 @@ export interface ReleaseFeature {
   priority: number;
   status: string;
   customerProject?: string;
-  microserviceNames: string[];
+  serviceAssignments: Array<{
+    microserviceName: string;
+    involvementTypeName: string;
+    phaseNames: string[];
+  }>;
   unknownServiceLabels: string[];
 }
 
@@ -35,7 +42,11 @@ export function selectReleaseFeatures(records: DataRecord[]): ReleaseFeature[] {
       priority: record.priority,
       status: record.status,
       customerProject: record.customer,
-      microserviceNames: getMicroserviceNames(record.impactedMicroserviceIds),
+      serviceAssignments: normalizeServiceAssignments(record.serviceAssignments).map((assignment) => ({
+        microserviceName: getMicroserviceName(assignment.microserviceId) ?? 'Unknown service',
+        involvementTypeName: getInvolvementTypeName(assignment.involvementTypeId),
+        phaseNames: getPhaseNames(assignment.applicablePhaseIds),
+      })),
       unknownServiceLabels: record.unknownServiceLabels ?? [],
     }));
 }

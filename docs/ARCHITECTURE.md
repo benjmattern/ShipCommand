@@ -6,11 +6,14 @@
 - `ReleaseTracker.tsx` renders release overview and read-only release detail screens.
 - `raid.ts` centralizes RAID ID display formatting.
 - `microservices.ts` owns controlled microservice reference data, workbook normalization, and ID-to-name resolution.
+- `phases.ts` and `involvementTypes.ts` own controlled delivery reference data.
+- `serviceAssignments.ts` validates assignments, removes duplicates, resolves stale values safely, and applies involvement defaults.
+- `ServiceAssignmentEditor.tsx` provides native microservice, involvement, and phase controls.
 
 No duplicate release-feature state is stored. Release tracker output is recalculated from the current RAID items. Navigation uses local React view state because the POC does not need a routing dependency.
 
-Service assignments currently live on each RAID item as stable microservice IDs. Workbook service strings are normalized during import with case-insensitive exact names and an explicit alias table. Unrecognized source labels are preserved separately and surfaced in the UI rather than guessed or discarded. Release views resolve service names from those same RAID assignments.
+`serviceAssignments` are the RAID item source of truth. Each assignment contains a stable microservice ID, involvement type ID, and ordered applicable phase IDs. Workbook service strings are normalized during import with case-insensitive exact names and an explicit alias table. Controlled services default to Full Delivery; explicit test-only workbook labels default to Testing Support. Unrecognized labels are preserved separately and surfaced rather than guessed or discarded.
 
-A future assignment model will add `microserviceId`, `involvementType`, and `applicablePhaseIds`. Planned involvement types are Full Delivery, Testing Support, Requirements Only, and Custom.
+Release views derive assignment summaries from RAID state; no separate `ReleaseFeature` persistence exists.
 
 Future identity work should store the base RAID number separately from its label. That migration can later support split identifiers such as `RAID ID 417.1` without changing the visible formatting contract.

@@ -1,5 +1,11 @@
 export type SourceKey = 'excel' | 'sharepoint' | 'servicenow';
 
+export interface ServiceAssignment {
+  microserviceId: string;
+  involvementTypeId: string;
+  applicablePhaseIds: string[];
+}
+
 export interface DataRecord {
   id: string;
   raidId: string;
@@ -9,7 +15,7 @@ export interface DataRecord {
   release?: string;
   status: string;
   customer?: string;
-  impactedMicroserviceIds: string[];
+  serviceAssignments: ServiceAssignment[];
   unknownServiceLabels?: string[];
   updatedAt?: string;
   summary?: string;

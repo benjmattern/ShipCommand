@@ -2,6 +2,7 @@ import * as XLSX from 'xlsx';
 import backlogWorkbookUrl from './data/BacklogData.xlsx?url';
 import { formatRaidId } from './raid';
 import { normalizeServiceValues } from './microservices';
+import { createDefaultServiceAssignment, normalizeServiceAssignments } from './serviceAssignments';
 import type { DataRecord, SourceKey } from './types';
 
 type WorkbookRow = Record<string, string | number | undefined>;
@@ -27,6 +28,7 @@ export async function loadBacklogRecords(): Promise<DataRecord[]> {
     .map((row, index) => {
       const fixedId = String(row.ID || `LOCAL-${index + 1}`).trim();
       const normalizedServices = normalizeServiceValues(String(row['Service(s)'] || ''));
+      const testingSupportIds = new Set(normalizedServices.testingSupportMicroserviceIds);
       return {
         id: `excel-${fixedId}`,
         raidId: formatRaidId(fixedId),
@@ -36,7 +38,8 @@ export async function loadBacklogRecords(): Promise<DataRecord[]> {
         release: String(row.Release || '').trim() || undefined,
         status: String(row.Status || 'Unassigned').trim(),
         customer: String(row['Customer / Project'] || '').trim() || undefined,
-        impactedMicroserviceIds: normalizedServices.microserviceIds,
+        serviceAssignments: normalizeServiceAssignments(normalizedServices.microserviceIds.map((microserviceId) =>
+          createDefaultServiceAssignment(microserviceId, testingSupportIds.has(microserviceId) ? 'testing-support' : 'full-delivery'))),
         unknownServiceLabels: normalizedServices.unknownLabels.length ? normalizedServices.unknownLabels : undefined,
         updatedAt: excelDate(row['Date of Submission']),
         summary: String(row['Description\r\nIT Notes/Comments'] || '').trim() || undefined,

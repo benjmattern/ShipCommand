@@ -53,9 +53,13 @@ export function ReleaseTracker({ records, loadState, onOpenRecord }: ReleaseTrac
                     <td className="record-title">{feature.title}</td>
                     <td><span className="status-pill">{feature.status}</span></td>
                     <td>{feature.customerProject || '—'}</td>
-                    <td>
-                      {feature.microserviceNames.length
-                        ? feature.microserviceNames.join(', ')
+                    <td className="release-services">
+                      {feature.serviceAssignments.length
+                        ? feature.serviceAssignments.map((assignment) => (
+                          <span key={assignment.microserviceName} title={assignment.phaseNames.join(', ') || 'No phases selected'}>
+                            <strong>{assignment.microserviceName}</strong> — {assignment.involvementTypeName}
+                          </span>
+                        ))
                         : 'Not identified.'}
                       {feature.unknownServiceLabels.length > 0 && (
                         <span className="unmapped-inline">Unmapped: {feature.unknownServiceLabels.join(', ')}</span>

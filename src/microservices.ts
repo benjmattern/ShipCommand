@@ -60,11 +60,13 @@ const namesById = new Map(microservices.map((service) => [service.id, service.na
 
 export interface NormalizedServices {
   microserviceIds: string[];
+  testingSupportMicroserviceIds: string[];
   unknownLabels: string[];
 }
 
 export function normalizeServiceValues(rawValue: string | undefined): NormalizedServices {
   const ids = new Set<string>();
+  const testingSupportIds = new Set<string>();
   const unknownLabels = new Set<string>();
 
   String(rawValue || '')
@@ -74,12 +76,16 @@ export function normalizeServiceValues(rawValue: string | undefined): Normalized
     .forEach((label) => {
       const normalizedLabel = label.toLowerCase();
       const matchedIds = aliases[normalizedLabel] ?? (idsByName.has(normalizedLabel) ? [idsByName.get(normalizedLabel)!] : []);
-      if (matchedIds.length) matchedIds.forEach((id) => ids.add(id));
+      if (matchedIds.length) {
+        matchedIds.forEach((id) => ids.add(id));
+        if (normalizedLabel.includes('(test only)')) matchedIds.forEach((id) => testingSupportIds.add(id));
+      }
       else unknownLabels.add(label);
     });
 
   return {
     microserviceIds: microservices.filter((service) => ids.has(service.id)).map((service) => service.id),
+    testingSupportMicroserviceIds: microservices.filter((service) => testingSupportIds.has(service.id)).map((service) => service.id),
     unknownLabels: Array.from(unknownLabels),
   };
 }

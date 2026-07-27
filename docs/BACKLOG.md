@@ -2,9 +2,7 @@
 
 ## Next
 
-- Add phase progress for Requirements, DEV/Unit Testing, SIT, E2E, Regression, CAT Ready, and CAT Execution.
-- Add service involvement types: Full Delivery, Testing Support, Requirements Only, and Custom.
-- Add applicable-phase selection to service assignments.
+- Add phase status and percent-complete progress records for Requirements, DEV/Unit Testing, SIT, E2E, Regression, CAT Ready, and CAT Execution.
 - Add a separate ServiceNow release export source.
 
 ## Deferred
@@ -13,4 +11,6 @@
 - Links, followed later by true file attachments.
 - Configurable Settings lists.
 - Settings-based microservice reference-data management.
+- Settings-based involvement-type and phase reference-data management.
+- Release-level phase matrix.
 - Backend or durable persistence.

@@ -2,8 +2,12 @@ import { useEffect, useMemo, useState } from 'react';
 import { loadBacklogRecords } from './connectors';
 import { formatRaidId } from './raid';
 import { ReleaseTracker } from './ReleaseTracker';
-import { getMicroserviceNames, microservices } from './microservices';
-import type { DataRecord } from './types';
+import { getInvolvementTypeName } from './involvementTypes';
+import { getMicroserviceName, microservices } from './microservices';
+import { getPhaseNames } from './phases';
+import { ServiceAssignmentEditor } from './ServiceAssignmentEditor';
+import { normalizeServiceAssignments } from './serviceAssignments';
+import type { DataRecord, ServiceAssignment } from './types';
 
 type ModalState =
   | { mode: 'view'; record: DataRecord }
@@ -93,6 +97,15 @@ function App() {
       .map((record) => Number(record.raidId.replace(/\D/g, '')))
       .filter((id) => Number.isFinite(id));
     const nextId = Math.max(0, ...numericIds) + 1;
+    const submittedAssignments: ServiceAssignment[] = microservices.flatMap((service) => {
+      const involvementTypeId = form.get(`assignmentType:${service.id}`);
+      if (!involvementTypeId) return [];
+      return [{
+        microserviceId: service.id,
+        involvementTypeId: String(involvementTypeId),
+        applicablePhaseIds: form.getAll(`assignmentPhases:${service.id}`).map(String),
+      }];
+    });
     const savedRecord: DataRecord = {
       id: existingRecord?.id || `local-${crypto.randomUUID()}`,
       raidId: existingRecord?.raidId || formatRaidId(nextId),
@@ -102,7 +115,7 @@ function App() {
       source: existingRecord?.source || 'excel',
       status: String(form.get('status') || 'Draft'),
       customer: String(form.get('customer') || '') || undefined,
-      impactedMicroserviceIds: form.getAll('microserviceIds').map(String),
+      serviceAssignments: normalizeServiceAssignments(submittedAssignments),
       unknownServiceLabels: existingRecord?.unknownServiceLabels,
       updatedAt: existingRecord?.updatedAt || new Date().toISOString().slice(0, 10),
       summary: String(form.get('summary') || ''),
@@ -238,9 +251,17 @@ function App() {
                 </dl>
                 <div className="service-detail">
                   <h3>Impacted microservices</h3>
-                  {modal.record.impactedMicroserviceIds.length ? (
-                    <div className="service-badges">
-                      {getMicroserviceNames(modal.record.impactedMicroserviceIds).map((name) => <span key={name}>{name}</span>)}
+                  {modal.record.serviceAssignments.length ? (
+                    <div className="assignment-summary-list">
+                      {normalizeServiceAssignments(modal.record.serviceAssignments).map((assignment) => (
+                        <article key={assignment.microserviceId}>
+                          <div>
+                            <strong>{getMicroserviceName(assignment.microserviceId) ?? 'Unknown service'}</strong>
+                            <span>{getInvolvementTypeName(assignment.involvementTypeId)}</span>
+                          </div>
+                          <p>{getPhaseNames(assignment.applicablePhaseIds).join(', ') || 'No phases selected.'}</p>
+                        </article>
+                      ))}
                     </div>
                   ) : <p>No impacted microservices identified.</p>}
                   {modal.record.unknownServiceLabels?.length ? (
@@ -274,29 +295,10 @@ function App() {
                   <label>Release (optional)<select name="release" defaultValue={modal.mode === 'edit' ? modal.record.release || '' : ''}><option value="">Not assigned</option>{releases.map((release) => <option key={release} value={release}>{release}</option>)}</select></label>
                   <label>Status<select name="status" defaultValue={modal.mode === 'edit' ? modal.record.status : 'Draft'}>{Array.from(new Set([...statusOptions, ...(modal.mode === 'edit' ? [modal.record.status] : [])])).map((status) => <option key={status}>{status}</option>)}</select></label>
                   <label>Customer / Project<input name="customer" defaultValue={modal.mode === 'edit' ? modal.record.customer : ''} placeholder="Optional" /></label>
-                  <fieldset className="full-field service-fieldset">
-                    <legend>Impacted microservices</legend>
-                    <p>Select any services affected by this RAID item.</p>
-                    <div className="service-options">
-                      {microservices.map((service) => (
-                        <label key={service.id}>
-                          <input
-                            type="checkbox"
-                            name="microserviceIds"
-                            value={service.id}
-                            defaultChecked={modal.mode === 'edit' && modal.record.impactedMicroserviceIds.includes(service.id)}
-                          />
-                          <span>{service.name}</span>
-                        </label>
-                      ))}
-                    </div>
-                    {modal.mode === 'edit' && modal.record.unknownServiceLabels?.length ? (
-                      <div className="unmapped-services form-unmapped">
-                        <strong>Preserved unmapped workbook values</strong>
-                        <p>{modal.record.unknownServiceLabels.join(', ')}</p>
-                      </div>
-                    ) : null}
-                  </fieldset>
+                  <ServiceAssignmentEditor
+                    initialAssignments={modal.mode === 'edit' ? modal.record.serviceAssignments : []}
+                    unknownLabels={modal.mode === 'edit' ? modal.record.unknownServiceLabels : undefined}
+                  />
                   <label className="full-field">Description<textarea name="summary" rows={4} defaultValue={modal.mode === 'edit' ? modal.record.summary : ''} placeholder="Add context, impact, or next steps" /></label>
                 </div>
                 <div className="modal-footer">
