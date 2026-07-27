@@ -18,6 +18,11 @@
 - Not Applicable phases are excluded from service, RAID, and release rollups.
 - Service, RAID, and release progress are derived. Release views contain no duplicate mutable progress state.
 - The full release phase matrix remains deferred.
+- Release phase summaries are derived from RAID service-phase progress; no duplicate release phase state exists.
+- Release phase filtering is local UI state and uses per-RAID phase rollups.
+- The initial Needs Attention summary reports blocked phases without speculative risk scoring.
+- Release-card active-phase counts include countable Not Started and In Progress phases; blocked and complete phases are reported separately.
+- Phase due dates, dependencies, notifications, and progress history are deferred.
 - Release reassignment moves the item to the selected release for the MVP.
 - True file attachments are deferred; links will be supported first.
 - RAID item splitting is deferred.

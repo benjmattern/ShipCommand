@@ -1,5 +1,12 @@
 import { useMemo, useState } from 'react';
 import { formatRaidId } from './raid';
+import { deliveryPhases } from './phases';
+import {
+  calculateRaidPhaseRollup,
+  getPhaseRollupStatusLabel,
+  selectAttentionPhases,
+  selectReleasePhaseRollups,
+} from './releasePhaseSelectors';
 import { selectReleaseFeatures, selectReleaseSummaries } from './releaseSelectors';
 import type { DataRecord } from './types';
 
@@ -11,6 +18,7 @@ interface ReleaseTrackerProps {
 
 export function ReleaseTracker({ records, loadState, onOpenRecord }: ReleaseTrackerProps) {
   const [selectedRelease, setSelectedRelease] = useState<string | null>(null);
+  const [selectedPhaseId, setSelectedPhaseId] = useState<string | null>(null);
   const summaries = useMemo(() => selectReleaseSummaries(records), [records]);
   const features = useMemo(
     () => selectedRelease
@@ -19,16 +27,76 @@ export function ReleaseTracker({ records, loadState, onOpenRecord }: ReleaseTrac
     [records, selectedRelease],
   );
   const unassignedCount = records.filter((record) => !record.release?.trim()).length;
+  const phaseRollups = useMemo(
+    () => selectedRelease ? selectReleasePhaseRollups(records, selectedRelease) : [],
+    [records, selectedRelease],
+  );
+  const attentionPhases = useMemo(() => selectAttentionPhases(phaseRollups), [phaseRollups]);
+  const displayedFeatures = useMemo(
+    () => selectedPhaseId
+      ? features.filter((feature) => {
+        const record = records.find((item) => item.id === feature.raidItemId);
+        return record ? calculateRaidPhaseRollup(record, selectedPhaseId).applicableProgressCount > 0 : false;
+      })
+      : features,
+    [features, records, selectedPhaseId],
+  );
+  const selectedPhaseName = deliveryPhases.find((phase) => phase.id === selectedPhaseId)?.name;
 
   if (selectedRelease) {
     return (
       <section className="board release-detail">
         <div className="board-header">
           <div>
-            <button className="text-button" type="button" onClick={() => setSelectedRelease(null)}>← All releases</button>
+            <button className="text-button" type="button" onClick={() => { setSelectedRelease(null); setSelectedPhaseId(null); }}>← All releases</button>
             <h2>{selectedRelease}</h2>
             <p>{features.length} assigned {features.length === 1 ? 'feature' : 'features'} from the current RAID register.</p>
           </div>
+        </div>
+        <div className="phase-summary-section">
+          <div className="section-heading">
+            <div><h3>Phase Summary</h3><p>Select a phase to filter the release features below.</p></div>
+            <button className={`phase-clear ${selectedPhaseId === null ? 'selected' : ''}`} type="button" onClick={() => setSelectedPhaseId(null)}>All phases</button>
+          </div>
+          <div className="phase-rollup-grid">
+            {phaseRollups.map((rollup) => {
+              const phase = deliveryPhases.find((item) => item.id === rollup.phaseId);
+              const label = getPhaseRollupStatusLabel(rollup.statusId);
+              return (
+                <button
+                  className={`phase-rollup-card phase-status-${rollup.statusId} ${selectedPhaseId === rollup.phaseId ? 'selected' : ''}`}
+                  type="button"
+                  key={rollup.phaseId}
+                  onClick={() => setSelectedPhaseId(rollup.phaseId)}
+                  aria-pressed={selectedPhaseId === rollup.phaseId}
+                  aria-label={`${phase?.name}: ${label}, ${rollup.averagePercent === null ? 'no applicable work' : `${rollup.averagePercent} percent`}`}
+                >
+                  <strong>{phase?.name}</strong>
+                  <span className="phase-rollup-result">{label}{rollup.averagePercent === null ? '' : ` · ${rollup.averagePercent}%`}</span>
+                  {rollup.applicableProgressCount ? (
+                    <small>
+                      {rollup.applicableProgressCount} applicable
+                      {rollup.blockedCount > 0 && ` · ${rollup.blockedCount} blocked`}
+                      {rollup.completeCount > 0 && ` · ${rollup.completeCount} complete`}
+                    </small>
+                  ) : <small>No applicable work</small>}
+                </button>
+              );
+            })}
+          </div>
+          <aside className={`attention-summary ${attentionPhases.length ? 'has-attention' : ''}`}>
+            <strong>Needs Attention</strong>
+            {attentionPhases.length ? (
+              <span>{attentionPhases.map((rollup) => {
+                const phase = deliveryPhases.find((item) => item.id === rollup.phaseId);
+                return `${phase?.name}: ${rollup.blockedCount} blocked`;
+              }).join(' · ')}</span>
+            ) : <span>No blocked phases.</span>}
+          </aside>
+        </div>
+        <div className="feature-filter-heading">
+          <strong>{selectedPhaseName ? `${selectedPhaseName} features` : 'All release features'}</strong>
+          <span>{displayedFeatures.length} shown</span>
         </div>
         <div className="table-wrap">
           <table>
@@ -40,13 +108,14 @@ export function ReleaseTracker({ records, loadState, onOpenRecord }: ReleaseTrac
                 <th>Status</th>
                 <th>Customer / Project</th>
                 <th>Services</th>
-                <th>Progress</th>
+                <th>{selectedPhaseName ? 'Phase progress' : 'Progress'}</th>
                 <th className="open-column"><span className="sr-only">Open</span></th>
               </tr>
             </thead>
             <tbody>
-              {features.map((feature) => {
+              {displayedFeatures.map((feature) => {
                 const record = records.find((item) => item.id === feature.raidItemId);
+                const phaseRollup = record && selectedPhaseId ? calculateRaidPhaseRollup(record, selectedPhaseId) : null;
                 return (
                   <tr key={feature.raidItemId} onClick={() => record && onOpenRecord(record)}>
                     <td className="raid-id">{record ? formatRaidId(record.raidId) : feature.raidItemId}</td>
@@ -66,7 +135,11 @@ export function ReleaseTracker({ records, loadState, onOpenRecord }: ReleaseTrac
                         <span className="unmapped-inline">Unmapped: {feature.unknownServiceLabels.join(', ')}</span>
                       )}
                     </td>
-                    <td className="progress-cell">{feature.progressPercent === null ? 'N/A' : `${feature.progressPercent}%`}</td>
+                    <td className="progress-cell">
+                      {phaseRollup
+                        ? <><span>{getPhaseRollupStatusLabel(phaseRollup.statusId)}</span>{phaseRollup.averagePercent === null ? 'N/A' : `${phaseRollup.averagePercent}%`}<small>{phaseRollup.applicableProgressCount} services{phaseRollup.blockedCount ? ` · ${phaseRollup.blockedCount} blocked` : ''}</small></>
+                        : feature.progressPercent === null ? 'N/A' : `${feature.progressPercent}%`}
+                    </td>
                     <td className="row-arrow">›</td>
                   </tr>
                 );
@@ -101,6 +174,11 @@ export function ReleaseTracker({ records, loadState, onOpenRecord }: ReleaseTrac
               <div className="release-progress">
                 <span>Derived progress</span>
                 <strong>{release.progressPercent === null ? 'N/A' : `${release.progressPercent}%`}</strong>
+              </div>
+              <div className="phase-readiness" aria-label={`${release.phaseSummary.blockedPhases} blocked phases, ${release.phaseSummary.completePhases} complete phases, ${release.phaseSummary.activePhases} active phases`}>
+                <span className={release.phaseSummary.blockedPhases ? 'has-blocked' : ''}>{release.phaseSummary.blockedPhases} blocked</span>
+                <span>{release.phaseSummary.completePhases} complete</span>
+                <span>{release.phaseSummary.activePhases} active</span>
               </div>
               <span className="release-open">View release <b>→</b></span>
             </button>

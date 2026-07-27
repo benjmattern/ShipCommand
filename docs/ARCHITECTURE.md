@@ -20,4 +20,6 @@ Release views derive assignment summaries from RAID state; no separate `ReleaseF
 
 `phaseProgress` remains nested within each service assignment. The smallest progress unit is RAID item + microservice + applicable phase. Reconciliation preserves overlapping phases, creates missing defaults, and removes non-applicable or duplicate entries.
 
+`releasePhaseSelectors.ts` derives ordered release phase summaries and per-RAID phase rollups from service-phase progress. Not Applicable entries are excluded. Phase-filter selection is local component state; no release phase data is persisted separately.
+
 Future identity work should store the base RAID number separately from its label. That migration can later support split identifiers such as `RAID ID 417.1` without changing the visible formatting contract.

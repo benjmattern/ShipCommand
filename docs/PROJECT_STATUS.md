@@ -8,4 +8,6 @@ The seven delivery phases, four involvement types, and five progress statuses ar
 
 Service, RAID, and release progress are derived in memory. Not Applicable phases are excluded from rollups.
 
-Not yet implemented: persistence, ServiceNow integration, a full release phase matrix, progress history, RAID splitting, attachments, or configurable Settings lists.
+Release detail includes a seven-phase summary derived from RAID service-phase progress. Selecting a phase filters the release feature list and displays per-RAID phase rollups. The attention summary currently identifies blocked phases only.
+
+Not yet implemented: persistence, ServiceNow integration, a full release phase matrix, phase due dates or dependencies, progress history, RAID splitting, attachments, or configurable Settings lists.

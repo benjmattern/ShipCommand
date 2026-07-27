@@ -3,6 +3,7 @@
 ## Next
 
 - Add progress history and audit events after durable persistence exists.
+- Add phase due dates and milestone dependencies.
 - Add a separate ServiceNow release export source.
 
 ## Deferred

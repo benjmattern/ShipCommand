@@ -4,6 +4,7 @@ import { getMicroserviceName } from './microservices';
 import { getPhaseNames } from './phases';
 import { calculateRaidProgress, calculateReleaseProgress, calculateServiceProgress } from './phaseProgress';
 import { getProgressStatusName } from './progressStatuses';
+import { selectReleasePhaseRollups, summarizePhaseCompletion } from './releasePhaseSelectors';
 import { normalizeServiceAssignments } from './serviceAssignments';
 
 export interface ReleaseFeature {
@@ -30,6 +31,7 @@ export interface ReleaseSummary {
   completedCount: number;
   remainingCount: number;
   progressPercent: number | null;
+  phaseSummary: ReturnType<typeof summarizePhaseCompletion>;
 }
 
 const completedStatuses = new Set(['complete', 'completed', 'done']);
@@ -74,6 +76,7 @@ export function selectReleaseSummaries(records: DataRecord[]): ReleaseSummary[] 
       completedCount: 0,
       remainingCount: 0,
       progressPercent: null,
+      phaseSummary: { blockedPhases: 0, completePhases: 0, activePhases: 0, notStartedPhases: 0, noWorkPhases: 0 },
     };
     current.featureCount += 1;
     if (isCompletedStatus(feature.status)) current.completedCount += 1;
@@ -85,6 +88,7 @@ export function selectReleaseSummaries(records: DataRecord[]): ReleaseSummary[] 
     .map((summary) => ({
       ...summary,
       progressPercent: calculateReleaseProgress(records.filter((record) => record.release?.trim() === summary.name)).percentComplete,
+      phaseSummary: summarizePhaseCompletion(selectReleasePhaseRollups(records, summary.name)),
     }))
     .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
 }
