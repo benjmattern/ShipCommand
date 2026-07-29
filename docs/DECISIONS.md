@@ -60,6 +60,11 @@
 - React receives sanitized JSON only; XML, credentials, and enterprise authentication remain outside React.
 - No third-party Python packages or PowerShell modules are introduced.
 - A generic connector framework is deferred until real integrations establish shared requirements.
+- R29.0.0.0 is the active VersionOne inspection dataset.
+- PowerShell owns authenticated retrieval; Python parses XML and React receives normalized JSON only.
+- Paging uses a fixed size of 100, a 100-page safety cap, and strict numeric Release validation.
+- Raw XML is neither persisted nor returned to React.
+- The read-only Story Explorer precedes Story-to-RAID, Story-to-Feature, and Release mapping work.
 
 ## Current UI
 

@@ -14,13 +14,22 @@ from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any, Callable
-from urllib.parse import unquote, urlsplit
+from urllib.parse import parse_qs, unquote, urlsplit
+
+from versionone_stories import (
+    DEFAULT_VERSIONONE_RELEASE,
+    VersionOneStoriesError,
+    retrieve_all_stories,
+    retrieve_versionone_page,
+    validate_release,
+)
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parent.parent
 DEMO_DIRECTORY = REPOSITORY_ROOT / "demo"
 VERSIONONE_HELPER = Path(__file__).resolve().parent / "test-versionone-connection.ps1"
 LOCAL_API_PATH = "/api/versionone/test"
+STORIES_API_PATH = "/api/versionone/stories"
 SUBPROCESS_TIMEOUT_SECONDS = 35
 
 
@@ -154,6 +163,8 @@ def run_versionone_diagnostic(
         "Bypass",
         "-File",
         str(VERSIONONE_HELPER),
+        "-Release",
+        DEFAULT_VERSIONONE_RELEASE,
     ]
 
     try:
@@ -210,9 +221,27 @@ def run_versionone_diagnostic(
     return local_status, result
 
 
+def run_versionone_stories(release: str) -> dict[str, Any]:
+    executable = find_powershell()
+    if not executable:
+        raise VersionOneStoriesError(
+            "VersionOne stories could not be retrieved.",
+            "The local integration API could not find a supported PowerShell executable.",
+        )
+    return retrieve_all_stories(
+        release,
+        fetch_page=lambda validated_release, offset: retrieve_versionone_page(
+            validated_release,
+            offset,
+            powershell_executable=executable,
+        ),
+    )
+
+
 def create_request_handler(
     demo_directory: Path,
     diagnostic: Callable[[], tuple[int, dict[str, Any]]] = run_versionone_diagnostic,
+    stories: Callable[[str], dict[str, Any]] = run_versionone_stories,
 ) -> type[BaseHTTPRequestHandler]:
     resolved_demo = demo_directory.resolve()
 
@@ -220,14 +249,70 @@ def create_request_handler(
         server_version = "ShipCommandLocalAPI/1.0"
 
         def do_GET(self) -> None:  # noqa: N802
-            request_path = urlsplit(self.path).path
+            parsed_request = urlsplit(self.path)
+            request_path = parsed_request.path
             if request_path == LOCAL_API_PATH:
                 self._serve_versionone_diagnostic()
+                return
+            if request_path == STORIES_API_PATH:
+                self._serve_versionone_stories(parsed_request.query)
                 return
             if request_path.startswith("/api/"):
                 self._send_json(404, {"status": "failed", "message": "Local API route not found."})
                 return
             self._serve_static(request_path)
+
+        def _serve_versionone_stories(self, query_string: str) -> None:
+            query = parse_qs(query_string, keep_blank_values=True)
+            if any(key != "release" for key in query) or len(query.get("release", [])) > 1:
+                self._send_story_error(400, DEFAULT_VERSIONONE_RELEASE, "Invalid VersionOne stories query.")
+                return
+            requested_release = query.get("release", [None])[0]
+            try:
+                release = validate_release(requested_release)
+            except ValueError as error:
+                self._send_story_error(400, requested_release or "", str(error))
+                return
+            try:
+                result = stories(release)
+            except VersionOneStoriesError as error:
+                local_status = 504 if "timeout" in error.technical_detail.lower() else 502
+                self._send_story_error(
+                    local_status,
+                    release,
+                    error.message,
+                    error.technical_detail,
+                    error.upstream_status,
+                )
+                return
+            except Exception as error:
+                print(f"Story retrieval error: {type(error).__name__}", file=sys.stderr)
+                self._send_story_error(
+                    500,
+                    release,
+                    "VersionOne stories could not be retrieved.",
+                    f"{type(error).__name__}; see the local server console.",
+                )
+                return
+            self._send_json(200, result)
+
+        def _send_story_error(
+            self,
+            status_code: int,
+            release: str,
+            message: str,
+            technical_detail: str | None = None,
+            upstream_status: int | None = None,
+        ) -> None:
+            payload = {
+                "status": "failed",
+                "message": message,
+                "technicalDetail": technical_detail,
+                "release": release,
+            }
+            if upstream_status is not None:
+                payload["upstreamHttpStatus"] = upstream_status
+            self._send_json(status_code, payload)
 
         def _serve_versionone_diagnostic(self) -> None:
             try:
@@ -287,10 +372,11 @@ def create_server(
     *,
     demo_directory: Path = DEMO_DIRECTORY,
     diagnostic: Callable[[], tuple[int, dict[str, Any]]] = run_versionone_diagnostic,
+    stories: Callable[[str], dict[str, Any]] = run_versionone_stories,
 ) -> ThreadingHTTPServer:
     if not (demo_directory / "index.html").is_file():
         raise FileNotFoundError(f"ShipCommand demo build was not found: {demo_directory}")
-    return ThreadingHTTPServer((host, port), create_request_handler(demo_directory, diagnostic))
+    return ThreadingHTTPServer((host, port), create_request_handler(demo_directory, diagnostic, stories))
 
 
 def parse_arguments() -> argparse.Namespace:
@@ -317,6 +403,7 @@ def main() -> int:
     print()
     print("API:")
     print(f"GET {LOCAL_API_PATH}")
+    print(f"GET {STORIES_API_PATH}")
     print()
     print("Press Ctrl+C to stop.")
 

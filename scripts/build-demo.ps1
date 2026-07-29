@@ -137,7 +137,7 @@ try {
     Write-Host ""
     Write-Host "Commit and push the refreshed demo before pulling it on the work computer:"
     Write-Host "    git status"
-    Write-Host "    git add demo scripts tests src/diagnostics docs package.json"
+    Write-Host "    git add .gitignore demo scripts tests src docs package.json"
     Write-Host '    git commit -m "Refresh work-computer demo build"'
     Write-Host "    git push origin main"
 }

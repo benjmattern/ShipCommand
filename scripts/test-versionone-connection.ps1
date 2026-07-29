@@ -1,10 +1,16 @@
+param(
+    [Parameter(Mandatory = $true)]
+    [ValidatePattern("^\d+\.\d+\.\d+\.\d+$")]
+    [string]$Release
+)
+
 $ErrorActionPreference = "Stop"
 [Console]::OutputEncoding = New-Object System.Text.UTF8Encoding($false)
 
 $endpoint = "https://versionone.usps.gov/v1/rest-1.v1/Data/Story"
 $query = @{
     sel = "Name,Number,AssetState,Status.Name,Scope.Name,Team.Name,Owners.Name"
-    where = "Scope.Name='27.0.0.0'"
+    where = "Scope.Name='$Release'"
     page = "5,0"
 }
 $queryString = ($query.GetEnumerator() | ForEach-Object {

@@ -4,6 +4,7 @@ import subprocess
 import tempfile
 import threading
 import unittest
+import sys
 from pathlib import Path
 from urllib.error import HTTPError
 from urllib.request import urlopen
@@ -11,6 +12,7 @@ from unittest.mock import patch
 
 
 SCRIPT_PATH = Path(__file__).resolve().parents[1] / "scripts" / "serve-shipcommand.py"
+sys.path.insert(0, str(SCRIPT_PATH.parent))
 SPEC = importlib.util.spec_from_file_location("serve_shipcommand", SCRIPT_PATH)
 assert SPEC and SPEC.loader
 serve_shipcommand = importlib.util.module_from_spec(SPEC)

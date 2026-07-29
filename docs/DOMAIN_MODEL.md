@@ -8,7 +8,7 @@ ShipCommand names business concepts independently of their source systems:
 - **RAID Item** — prioritized release-related risk, action, issue, decision, or tracked feature in the current POC.
 - **Service Assignment** — a microservice’s involvement in a RAID item, including involvement type and applicable phases.
 - **Phase Progress** — status, percent, and optional note for one RAID item + microservice + phase.
-- **User Story** — delivery work synchronized from a system such as VersionOne.
+- **User Story** — an external delivery record retrieved read-only from a system such as VersionOne.
 - **Test Case** — test definition and result synchronized from a system such as ALM.
 - **Change Record (CR)** — production-change governance record synchronized from a system such as ServiceNow.
 - **Governance Document / Approval** — required release evidence and its approval state.
@@ -33,6 +33,8 @@ Release
 ```
 
 A Release may relate these objects without owning the authoritative content of externally sourced records. Relationships, annotations, planning metadata, and derived rollups may be ShipCommand-owned.
+
+VersionOne Stories are not currently the same entity as RAID items or ShipCommand features. R29 data is being inspected before Story-to-RAID, Story-to-Feature, or Release relationship rules are defined.
 
 ## Current controlled reference data
 

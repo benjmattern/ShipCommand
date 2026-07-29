@@ -44,6 +44,10 @@ React no longer calls VersionOne directly. `scripts/serve-shipcommand.py` serves
 
 The current endpoint is diagnostic only. This is a local POC boundary, not an approved production-hosting model. ServiceNow and ALM may later use the same boundary, but no generic enterprise connector framework exists yet.
 
+## VersionOne Story Retrieval v1
+
+`GET /api/versionone/stories` retrieves the current R29 inspection dataset. The server validates an optional four-segment numeric Release parameter, requests sequential fixed 100-record pages through controlled PowerShell authentication, and stops on a partial or empty page. Python parses each XML page once, normalizes and deduplicates Stories by stable ID, and returns JSON only. Raw XML never crosses the React boundary. Retrieval is capped at 100 pages and remains an uncached local POC operation.
+
 ## Target logical architecture — vision
 
 ```text

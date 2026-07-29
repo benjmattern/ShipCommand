@@ -10,12 +10,13 @@ This is a directional backlog, not a delivery commitment. Prefer validated verti
 4. **Complete:** Phase progress-mode metadata, Boolean CAT Ready display and editing, numeric compatibility helpers, and rollup compatibility review.
 5. **Complete:** Diagnostics page and direct-browser VersionOne feasibility test; confirmed unreadable browser-fetch failure.
 6. **Complete:** Local Integration API server, committed-demo serving, `/api/versionone/test`, same-origin React diagnostic, and sanitized results.
-7. Validate whether PowerShell `-UseDefaultCredentials` succeeds on the USPS work computer.
-8. Add Release/phase boundary warnings and phase-overlap warnings.
-9. Add actual dates and schedule variance.
-10. Add a read-only User Story slice from an approved VersionOne export or fixture.
-11. Relate normalized User Stories to Release and RAID scope.
-12. Add one read-only testing slice from ALM data.
+7. **Complete:** Validate PowerShell `-UseDefaultCredentials` connectivity on the USPS work computer.
+8. **Complete:** Switch inspection to R29, validate Release input, retrieve paged Stories, parse XML, normalize records, and add the read-only Story Explorer with search/status/team filters.
+9. Validate full R29 statuses, teams, owners, missing fields, duplicates, and anomalies.
+10. Determine Story-to-RAID and Story-to-Feature relationship rules.
+11. Add Release/phase boundary warnings and phase-overlap warnings.
+12. Add actual dates and schedule variance.
+13. Add one read-only testing slice from ALM data.
 
 ## Platform foundations to validate
 
@@ -23,6 +24,7 @@ This is a directional backlog, not a delivery commitment. Prefer validated verti
 - Parse VersionOne XML, define the normalized Story contract, add paging, and validate a release parameter
 - Display selected-Release stories and associate them with ShipCommand Release and RAID records
 - Add ServiceNow and ALM integration slices after their access paths are validated
+- Add a VersionOne Release selector, detail links, and incremental refresh or caching only after R29 inspection
 - Source reference and provenance model
 - Connector diagnostics and unknown-field handling
 - Cross-system identity and relationship ownership

@@ -24,7 +24,7 @@ To create the committed static build used by the work computer:
 git pull
 .\scripts\build-demo.ps1
 git status
-git add demo scripts tests src/diagnostics docs package.json
+git add .gitignore demo scripts tests src docs package.json
 git commit -m "Refresh work-computer demo build"
 git push origin main
 ```
@@ -45,6 +45,8 @@ python .\scripts\serve-shipcommand.py
 Open `http://localhost:8000` in a browser. The Python standard-library server locates and serves the committed `demo/` build and exposes same-origin Local Integration API routes. Use Ctrl+C to stop it. A custom port can be supplied with `--port`.
 
 Python is required on the work computer; npm is not. Sign into VersionOne in the browser if needed for normal navigation, but the server diagnostic uses the current Windows user’s default credentials through a controlled PowerShell request rather than forwarding browser cookies. Do not enter a password or token into ShipCommand.
+
+For Story Explorer validation, open VersionOne, load the fixed R29 dataset, and record Story/page counts, duration, status/team/owner behavior, missing fields, and possible duplicates. Exercise number/name search plus status and team filters. Do not copy sensitive Story content into public documentation.
 
 ## Validation expectations
 
