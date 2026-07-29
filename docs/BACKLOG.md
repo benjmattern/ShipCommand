@@ -4,11 +4,13 @@ This is a directional backlog, not a delivery commitment. Prefer validated verti
 
 ## Next candidate increments
 
-1. Define Release identity, schedule, and milestone metadata without implementing a general backend prematurely.
-2. Add a read-only User Story slice from an approved VersionOne export or fixture.
-3. Relate normalized User Stories to Release and RAID scope.
-4. Add phase due dates and milestone dependencies.
-5. Add one read-only testing slice from ALM data.
+1. **Complete:** Release Planning Slice 1 schedule data-model foundation.
+2. Add read-only Release and phase schedule display.
+3. Add schedule CRUD and date validation UI.
+4. Add Release/phase boundary warnings.
+5. Add a read-only User Story slice from an approved VersionOne export or fixture.
+6. Relate normalized User Stories to Release and RAID scope.
+7. Add one read-only testing slice from ALM data.
 
 ## Platform foundations to validate
 
@@ -39,6 +41,7 @@ This is a directional backlog, not a delivery commitment. Prefer validated verti
 - Links followed by true file attachments
 - Configurable Settings and reference-data administration
 - Notifications and approval workflows
+- Cross-release timeline and Gantt visualization
 - Production deployment
 
 ## Guardrails

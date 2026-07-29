@@ -21,6 +21,9 @@ ShipCommand is the foundation of a Release Operations Platform and unified relea
 - Derived service, RAID, release, and phase rollups
 - Release phase summaries, blocked-phase attention, and phase filtering
 - Preservation of unknown workbook service labels
+- Release Planning Slice 1: normalized Release and phase schedule types, seed data, lookup/normalization helpers, and structural validation
+
+The schedule foundation has no visible UI. Its sample dates are non-authoritative and separate from the RAID workbook.
 
 ## Current operating constraints
 
@@ -39,7 +42,7 @@ ShipCommand is the foundation of a Release Operations Platform and unified relea
 - Change records from ServiceNow
 - Test cases and results from ALM
 - Documents and approval evidence from SharePoint
-- Release schedules, milestones, and dependencies
+- Read-only release schedule display followed by schedule editing, milestones, and dependencies
 - Governance and documentation approvals
 - Financial estimates and funding context
 - Portfolio reporting across releases

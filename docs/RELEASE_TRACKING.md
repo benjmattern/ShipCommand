@@ -23,9 +23,13 @@ Requirements Gathering and Writing; DEV / Unit Testing; SIT; E2E; Regression; CA
 ## Current limitations
 
 - Release identity is a normalized workbook string rather than a persisted aggregate.
-- No dates, dependencies, history, notifications, or full phase matrix.
+- No schedule UI, schedule CRUD, dependencies, history, notifications, or full phase matrix.
 - No shared state or source-system synchronization.
 - Completion counts use existing RAID status values conservatively.
+
+## Planned schedule foundation
+
+The data model now supports optional Release and per-phase planned start/end dates. Schedule data is currently non-authoritative POC seed data, is not displayed, and does not affect execution progress or readiness. Read-only schedule display and CRUD are future slices.
 
 ## Direction
 

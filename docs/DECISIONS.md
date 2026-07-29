@@ -30,6 +30,11 @@
 - Not Applicable is excluded from rollups.
 - Release phase summaries and filtering derive from service-phase progress.
 - Needs Attention initially reports blocked phases without speculative risk scoring.
+- Release planning dates use date-only ISO strings (`YYYY-MM-DD`) or `null`.
+- Release schedules are normalized separately from derived Release summaries and execution progress.
+- Schedule dates never alter progress, phase status, blockers, or readiness.
+- The POC temporarily uses Release name as the schedule key.
+- Schedule seed data is non-authoritative and remains separate from `BacklogData.xlsx`; the workbook schema is unchanged.
 
 ## Current UI
 
@@ -44,7 +49,7 @@
 - Connector contract beyond the needs proven by real sources
 - Write-back and conflict resolution
 - Full release phase matrix
-- Phase dates, dependencies, notifications, and history
+- Schedule UI/CRUD, boundary warnings, dependencies, notifications, and history
 - RAID splitting, attachments, configurable Settings, and approval execution
 
 See [System Boundaries](SYSTEM_BOUNDARIES.md) and [System Architecture](SYSTEM_ARCHITECTURE.md).
