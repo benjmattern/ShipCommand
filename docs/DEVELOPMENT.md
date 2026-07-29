@@ -18,15 +18,32 @@ npm run build
 
 `npm run build` runs TypeScript compilation and produces the static `dist/` directory.
 
-## Work computer
-
-Transfer the built static files and serve them from the build directory:
+To create the committed static build used by the work computer:
 
 ```text
+git pull
+.\scripts\build-demo.ps1
+git status
+git add demo scripts/build-demo.ps1 package.json docs/DEVELOPMENT.md
+git commit -m "Refresh work-computer demo build"
+git push origin main
+```
+
+The script runs `npm run build`, validates `dist/`, stages a complete copy, and safely replaces `demo/`. It removes stale generated assets so `demo/` mirrors the current Vite output. It does not run Git commands automatically. The equivalent convenience command is `npm run demo:build`.
+
+Run the script whenever application code changes before work-computer testing. Node and npm are required only on the personal development computer.
+
+## Work computer
+
+Pull the committed static demo build and serve it:
+
+```text
+git pull
+cd demo
 python -m http.server 8000
 ```
 
-Open the local server URL in a browser. Serving files over HTTP is required for workbook fetch behavior; opening `index.html` directly is not the supported workflow.
+Open `http://localhost:8000` in a browser. Serving files over HTTP is required for workbook fetch and Diagnostics behavior; opening `index.html` directly is not the supported workflow. npm is not required on the work computer.
 
 ## Validation expectations
 
@@ -34,7 +51,7 @@ Open the local server URL in a browser. Serving files over HTTP is required for 
 - Exercise workbook loading and affected CRUD or release flows.
 - Validate pure selectors with focused data cases for nontrivial rollups or sorting.
 - Preserve the unrelated root `backlog.md`.
-- Do not update generated demo artifacts unless explicitly requested.
+- Refresh generated demo artifacts with `scripts/build-demo.ps1` when a work-computer build is requested.
 
 ## Current warnings
 
