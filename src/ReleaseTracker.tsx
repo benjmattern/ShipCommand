@@ -8,6 +8,7 @@ import {
   selectReleasePhaseRollups,
 } from './releasePhaseSelectors';
 import { selectReleaseFeatures, selectReleaseSummaries } from './releaseSelectors';
+import { ReleaseScheduleSection } from './ReleaseScheduleSection';
 import type { DataRecord } from './types';
 
 interface ReleaseTrackerProps {
@@ -53,6 +54,7 @@ export function ReleaseTracker({ records, loadState, onOpenRecord }: ReleaseTrac
             <p>{features.length} assigned {features.length === 1 ? 'feature' : 'features'} from the current RAID register.</p>
           </div>
         </div>
+        <ReleaseScheduleSection releaseId={selectedRelease} />
         <div className="phase-summary-section">
           <div className="section-heading">
             <div><h3>Phase Summary</h3><p>Select a phase to filter the release features below.</p></div>

@@ -8,7 +8,7 @@ The React POC uses local component state and CSS. `App.tsx` owns the RAID array 
 
 - **RAID dashboard:** summary metrics, release filter, draggable priority grid, and item modal.
 - **Releases overview:** compact, accessible release rows with semantically sorted metrics.
-- **Release detail:** phase summary, attention summary, phase filter, and derived feature table.
+- **Release detail:** read-only Schedule section followed by phase summary, attention summary, phase filter, and derived feature table.
 - **RAID modal:** details plus service, involvement, phase applicability, and progress editing.
 
 ## State principles
@@ -21,6 +21,12 @@ The React POC uses local component state and CSS. `App.tsx` owns the RAID array 
 ## Accessibility and responsiveness
 
 Interactive overview rows and phase summaries use native buttons, visible focus states, text labels, and accessible names. Layouts wrap or stack on narrower screens. Color supplements rather than replaces status text.
+
+## Release schedule display
+
+`ReleaseScheduleSection` sits after the Release Detail header and before execution Phase Summary. It uses the normalized schedule lookup, displays the overall window first, and then displays all controlled phases in order. Complete and partial ranges use explicit date text; missing values say `Not scheduled`, and Releases without a schedule use a dedicated empty state.
+
+Date-only values are formatted by a pure helper that reads their year, month, and day components without converting through a timezone. The section is read-only and does not expose execution indicators or editing controls.
 
 ## Direction
 

@@ -5,12 +5,13 @@ This is a directional backlog, not a delivery commitment. Prefer validated verti
 ## Next candidate increments
 
 1. **Complete:** Release Planning Slice 1 schedule data-model foundation.
-2. Add read-only Release and phase schedule display.
-3. Add schedule CRUD and date validation UI.
-4. Add Release/phase boundary warnings.
-5. Add a read-only User Story slice from an approved VersionOne export or fixture.
-6. Relate normalized User Stories to Release and RAID scope.
-7. Add one read-only testing slice from ALM data.
+2. **Complete:** Read-only Release Schedule display, including the overall Release window, ordered phase dates, and partial and empty states.
+3. Add schedule CRUD and date validation messages.
+4. Add Release/phase boundary warnings and phase-overlap warnings.
+5. Add actual dates and schedule variance.
+6. Add a read-only User Story slice from an approved VersionOne export or fixture.
+7. Relate normalized User Stories to Release and RAID scope.
+8. Add one read-only testing slice from ALM data.
 
 ## Platform foundations to validate
 

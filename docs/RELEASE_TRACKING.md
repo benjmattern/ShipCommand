@@ -11,6 +11,8 @@
 - Blocked phases appear in a Needs Attention summary.
 - Selecting a phase filters release rows and shows per-RAID phase progress.
 - Editing RAID release, service, phase, or progress information updates release views immediately.
+- Release Detail includes a read-only Schedule section with the overall Release window and all seven phase date ranges.
+- Complete, partial, and unscheduled Release schedules have explicit display states.
 
 ## Rollup behavior
 
@@ -23,13 +25,15 @@ Requirements Gathering and Writing; DEV / Unit Testing; SIT; E2E; Regression; CA
 ## Current limitations
 
 - Release identity is a normalized workbook string rather than a persisted aggregate.
-- No schedule UI, schedule CRUD, dependencies, history, notifications, or full phase matrix.
+- No schedule CRUD, dependencies, history, notifications, or full phase matrix.
 - No shared state or source-system synchronization.
 - Completion counts use existing RAID status values conservatively.
 
-## Planned schedule foundation
+## Schedule planning
 
-The data model now supports optional Release and per-phase planned start/end dates. Schedule data is currently non-authoritative POC seed data, is not displayed, and does not affect execution progress or readiness. Read-only schedule display and CRUD are future slices.
+The data model supports optional Release and per-phase planned start/end dates. Release Detail displays complete and partial seeded schedules, keeps every controlled phase visible, and shows an explicit empty state when no schedule exists. The display is read-only, and the non-authoritative POC dates are labeled as sample planning data.
+
+Schedule data does not affect execution progress, phase status, blockers, or readiness. Schedule editing remains a future slice.
 
 ## Direction
 

@@ -35,6 +35,11 @@
 - Schedule dates never alter progress, phase status, blockers, or readiness.
 - The POC temporarily uses Release name as the schedule key.
 - Schedule seed data is non-authoritative and remains separate from `BacklogData.xlsx`; the workbook schema is unchanged.
+- Release Detail shows the overall planned window followed by all seven controlled phase schedules.
+- Unscheduled phases remain visible and use explicit `Not scheduled` text; a Release without a schedule uses a dedicated empty state.
+- Seeded POC planning dates are identified once at the Schedule section level.
+- Date-only schedule values are formatted directly from ISO components without timezone conversion.
+- Schedule presentation remains separate from execution progress and indicators.
 
 ## Current UI
 
@@ -49,7 +54,7 @@
 - Connector contract beyond the needs proven by real sources
 - Write-back and conflict resolution
 - Full release phase matrix
-- Schedule UI/CRUD, boundary warnings, dependencies, notifications, and history
+- Schedule CRUD, boundary and overlap warnings, dependencies, notifications, and history
 - RAID splitting, attachments, configurable Settings, and approval execution
 
 See [System Boundaries](SYSTEM_BOUNDARIES.md) and [System Architecture](SYSTEM_ARCHITECTURE.md).
