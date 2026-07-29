@@ -23,8 +23,9 @@ ShipCommand is the foundation of a Release Operations Platform and unified relea
 - Preservation of unknown workbook service labels
 - Release Planning Slice 1: normalized Release and phase schedule types, seed data, lookup/normalization helpers, and structural validation
 - Release Planning Slice 2: read-only overall and ordered phase schedule display in Release Detail, including partial and empty states
+- Release Planning Slice 3: session-only schedule create, edit, save, cancel, clear, and structural validation UI
 
-Seeded Releases show non-authoritative sample planning dates separately from the RAID workbook. Schedule CRUD remains the next planning slice.
+Seeded Releases show non-authoritative sample planning dates separately from the RAID workbook. Schedule CRUD is available for the current session; refresh restores seed values. Permanent persistence and planning-warning rules remain open.
 
 ## Current operating constraints
 
@@ -43,7 +44,7 @@ Seeded Releases show non-authoritative sample planning dates separately from the
 - Change records from ServiceNow
 - Test cases and results from ALM
 - Documents and approval evidence from SharePoint
-- Schedule editing followed by milestones and dependencies
+- Persistent schedule storage, planning warnings, milestones, and dependencies
 - Governance and documentation approvals
 - Financial estimates and funding context
 - Portfolio reporting across releases

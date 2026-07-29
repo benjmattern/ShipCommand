@@ -1,22 +1,34 @@
 import { deliveryPhases } from './phases';
-import { releaseScheduleSeed } from './releaseScheduleSeed';
-import { getReleaseSchedule } from './releaseSchedules';
+import { useState } from 'react';
+import { ReleaseScheduleEditor } from './ReleaseScheduleEditor';
 import { formatScheduleRange } from './scheduleDisplay';
+import type { ReleaseSchedule } from './releaseScheduleTypes';
 
 interface ReleaseScheduleSectionProps {
   releaseId: string;
+  schedule?: ReleaseSchedule;
+  isSeedSchedule: boolean;
+  onSave: (schedule: ReleaseSchedule) => void;
 }
 
-export function ReleaseScheduleSection({ releaseId }: ReleaseScheduleSectionProps) {
-  const schedule = getReleaseSchedule(releaseScheduleSeed, releaseId);
+export function ReleaseScheduleSection({
+  releaseId,
+  schedule,
+  isSeedSchedule,
+  onSave,
+}: ReleaseScheduleSectionProps) {
+  const [editing, setEditing] = useState(false);
 
   return (
     <section className="release-schedule-section" aria-labelledby="release-schedule-heading">
       <div className="section-heading schedule-heading">
         <div>
           <h3 id="release-schedule-heading">Schedule</h3>
-          {schedule && <p>Sample planning dates for proof-of-concept use.</p>}
+          {isSeedSchedule && <p>Sample planning dates for proof-of-concept use.</p>}
         </div>
+        <button className="secondary-button schedule-edit-button" type="button" onClick={() => setEditing(true)}>
+          Edit schedule
+        </button>
       </div>
 
       {!schedule ? (
@@ -39,6 +51,17 @@ export function ReleaseScheduleSection({ releaseId }: ReleaseScheduleSectionProp
             })}
           </dl>
         </>
+      )}
+      {editing && (
+        <ReleaseScheduleEditor
+          releaseId={releaseId}
+          schedule={schedule}
+          onCancel={() => setEditing(false)}
+          onSave={(updatedSchedule) => {
+            onSave(updatedSchedule);
+            setEditing(false);
+          }}
+        />
       )}
     </section>
   );

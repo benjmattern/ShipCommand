@@ -40,6 +40,12 @@
 - Seeded POC planning dates are identified once at the Schedule section level.
 - Date-only schedule values are formatted directly from ISO components without timezone conversion.
 - Schedule presentation remains separate from execution progress and indicators.
+- Seed schedule fixtures remain immutable; editable schedules initialize as normalized React-state copies.
+- Release Schedule editing is session-only, and refresh restores seeded values.
+- The editor uses native date inputs; empty input strings normalize to `null`.
+- Schedule drafts remain isolated until Save, while Cancel and closing discard changes.
+- Structural validation blocks malformed dates and invalid start/end ordering; partial and explicitly empty schedules remain valid.
+- Planning changes never alter execution progress, and permanent schedule persistence remains deferred.
 
 ## Current UI
 
@@ -54,7 +60,7 @@
 - Connector contract beyond the needs proven by real sources
 - Write-back and conflict resolution
 - Full release phase matrix
-- Schedule CRUD, boundary and overlap warnings, dependencies, notifications, and history
+- Durable schedule persistence, boundary and overlap warnings, dependencies, notifications, and history
 - RAID splitting, attachments, configurable Settings, and approval execution
 
 See [System Boundaries](SYSTEM_BOUNDARIES.md) and [System Architecture](SYSTEM_ARCHITECTURE.md).

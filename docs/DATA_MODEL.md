@@ -53,6 +53,8 @@ Schedule data answers when work is planned. `phaseProgress` answers how executio
 
 The current POC temporarily keys schedules by the normalized Release name because no independent Release identity exists yet. Non-authoritative sample schedules are seeded separately from `BacklogData.xlsx`; the workbook schema is unchanged.
 
+Editable schedule state is initialized from normalized deep copies of the immutable seed collection. Updates use non-mutating normalized upserts and remain in React memory for the current session. Canonical dates remain ISO strings or `null`; empty native date-input strings become `null`. An explicit schedule whose overall and phase dates are all `null` is valid and distinct from a Release with no schedule record.
+
 ## Workbook normalization
 
 `connectors.ts` loads `BacklogData.xlsx` through XLSX. Service strings are split and matched case-insensitively through an explicit alias map. Controlled values become service assignments. Unknown values are preserved separately rather than guessed or discarded.
@@ -69,4 +71,4 @@ These projections are recomputed from the in-memory RAID array and are not store
 
 ## Persistence
 
-There is none. Browser refresh restores workbook-derived records. The current model is evidence for future design, not a finalized database schema.
+There is none. Browser refresh restores workbook-derived RAID records and seeded Release schedules. The current model is evidence for future design, not a finalized database schema.

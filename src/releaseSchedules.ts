@@ -61,6 +61,35 @@ export function getReleaseSchedule(schedules: ReleaseSchedule[], releaseId: stri
   return schedule ? normalizeReleaseSchedule(schedule) : undefined;
 }
 
+export function createInitialScheduleState(schedules: ReleaseSchedule[]) {
+  return schedules.map(normalizeReleaseSchedule);
+}
+
+export function upsertReleaseSchedule(schedules: ReleaseSchedule[], updatedSchedule: ReleaseSchedule) {
+  const normalized = normalizeReleaseSchedule(updatedSchedule);
+  const releaseKey = normalized.releaseId.toLowerCase();
+  const existingIndex = schedules.findIndex(
+    (schedule) => schedule.releaseId.trim().toLowerCase() === releaseKey,
+  );
+
+  if (existingIndex < 0) return [...schedules, normalized];
+  return schedules.map((schedule, index) => index === existingIndex ? normalized : schedule);
+}
+
+export function clearReleaseScheduleDates(schedule: ReleaseSchedule) {
+  const normalized = normalizeReleaseSchedule(schedule);
+  return {
+    ...normalized,
+    plannedStartDate: null,
+    plannedEndDate: null,
+    phaseSchedules: normalized.phaseSchedules.map((phaseSchedule) => ({
+      ...phaseSchedule,
+      plannedStartDate: null,
+      plannedEndDate: null,
+    })),
+  };
+}
+
 function validateDate(
   issues: ScheduleValidationIssue[],
   value: IsoDate | null,

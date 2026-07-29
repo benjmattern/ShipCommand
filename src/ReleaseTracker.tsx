@@ -9,6 +9,12 @@ import {
 } from './releasePhaseSelectors';
 import { selectReleaseFeatures, selectReleaseSummaries } from './releaseSelectors';
 import { ReleaseScheduleSection } from './ReleaseScheduleSection';
+import { releaseScheduleSeed } from './releaseScheduleSeed';
+import {
+  createInitialScheduleState,
+  getReleaseSchedule,
+  upsertReleaseSchedule,
+} from './releaseSchedules';
 import type { DataRecord } from './types';
 
 interface ReleaseTrackerProps {
@@ -20,6 +26,12 @@ interface ReleaseTrackerProps {
 export function ReleaseTracker({ records, loadState, onOpenRecord }: ReleaseTrackerProps) {
   const [selectedRelease, setSelectedRelease] = useState<string | null>(null);
   const [selectedPhaseId, setSelectedPhaseId] = useState<string | null>(null);
+  const [releaseSchedules, setReleaseSchedules] = useState(
+    () => createInitialScheduleState(releaseScheduleSeed),
+  );
+  const [unchangedSeedReleaseKeys, setUnchangedSeedReleaseKeys] = useState(
+    () => new Set(releaseScheduleSeed.map((schedule) => schedule.releaseId.trim().toLowerCase())),
+  );
   const summaries = useMemo(() => selectReleaseSummaries(records), [records]);
   const features = useMemo(
     () => selectedRelease
@@ -43,6 +55,9 @@ export function ReleaseTracker({ records, loadState, onOpenRecord }: ReleaseTrac
     [features, records, selectedPhaseId],
   );
   const selectedPhaseName = deliveryPhases.find((phase) => phase.id === selectedPhaseId)?.name;
+  const selectedSchedule = selectedRelease
+    ? getReleaseSchedule(releaseSchedules, selectedRelease)
+    : undefined;
 
   if (selectedRelease) {
     return (
@@ -54,7 +69,20 @@ export function ReleaseTracker({ records, loadState, onOpenRecord }: ReleaseTrac
             <p>{features.length} assigned {features.length === 1 ? 'feature' : 'features'} from the current RAID register.</p>
           </div>
         </div>
-        <ReleaseScheduleSection releaseId={selectedRelease} />
+        <ReleaseScheduleSection
+          key={selectedRelease}
+          releaseId={selectedRelease}
+          schedule={selectedSchedule}
+          isSeedSchedule={unchangedSeedReleaseKeys.has(selectedRelease.trim().toLowerCase())}
+          onSave={(updatedSchedule) => {
+            setReleaseSchedules((current) => upsertReleaseSchedule(current, updatedSchedule));
+            setUnchangedSeedReleaseKeys((current) => {
+              const next = new Set(current);
+              next.delete(updatedSchedule.releaseId.trim().toLowerCase());
+              return next;
+            });
+          }}
+        />
         <div className="phase-summary-section">
           <div className="section-heading">
             <div><h3>Phase Summary</h3><p>Select a phase to filter the release features below.</p></div>

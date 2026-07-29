@@ -6,7 +6,7 @@ This is a directional backlog, not a delivery commitment. Prefer validated verti
 
 1. **Complete:** Release Planning Slice 1 schedule data-model foundation.
 2. **Complete:** Read-only Release Schedule display, including the overall Release window, ordered phase dates, and partial and empty states.
-3. Add schedule CRUD and date validation messages.
+3. **Complete:** Session-only Release Schedule creation, overall and phase editing, isolated draft cancellation, structural validation messages, clear behavior, and normalized in-memory state.
 4. Add Release/phase boundary warnings and phase-overlap warnings.
 5. Add actual dates and schedule variance.
 6. Add a read-only User Story slice from an approved VersionOne export or fixture.
@@ -35,6 +35,11 @@ This is a directional backlog, not a delivery commitment. Prefer validated verti
 
 ## Deferred
 
+- Persistent schedule storage and schedule audit history
+- Schedule workbook import/export
+- Release-boundary, overlap, and chronological warnings
+- Actual schedule dates and variance
+- Cross-release planning
 - Enterprise-system write-back
 - Full release-by-service-by-phase matrix
 - Progress history and audit events before persistence

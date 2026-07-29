@@ -8,12 +8,13 @@ The React POC uses local component state and CSS. `App.tsx` owns the RAID array 
 
 - **RAID dashboard:** summary metrics, release filter, draggable priority grid, and item modal.
 - **Releases overview:** compact, accessible release rows with semantically sorted metrics.
-- **Release detail:** read-only Schedule section followed by phase summary, attention summary, phase filter, and derived feature table.
+- **Release detail:** Schedule display and editor followed by phase summary, attention summary, phase filter, and derived feature table.
 - **RAID modal:** details plus service, involvement, phase applicability, and progress editing.
 
 ## State principles
 
 - Mutable RAID state has one owner.
+- Mutable Release schedule state is owned by `ReleaseTracker` and initialized from normalized copies of immutable seed fixtures.
 - Release and progress UI is derived.
 - View, selected release, selected phase, modal, and drag state are local UI concerns.
 - No router or state library is justified by current scope.
@@ -26,7 +27,9 @@ Interactive overview rows and phase summaries use native buttons, visible focus 
 
 `ReleaseScheduleSection` sits after the Release Detail header and before execution Phase Summary. It uses the normalized schedule lookup, displays the overall window first, and then displays all controlled phases in order. Complete and partial ranges use explicit date text; missing values say `Not scheduled`, and Releases without a schedule use a dedicated empty state.
 
-Date-only values are formatted by a pure helper that reads their year, month, and day components without converting through a timezone. The section is read-only and does not expose execution indicators or editing controls.
+Date-only values are formatted by a pure helper that reads their year, month, and day components without converting through a timezone. The read-only section does not expose execution indicators.
+
+`ReleaseScheduleEditor` reuses the application modal conventions and owns an isolated normalized draft. Existing schedules prepopulate it; an unscheduled Release receives an empty seven-phase draft. Native date inputs stack responsively without horizontal scrolling. Domain validation messages appear at the Release or phase scope, Save upserts into session state, and Cancel, Escape, backdrop close, or switching Releases discard the draft.
 
 ## Direction
 
