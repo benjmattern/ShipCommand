@@ -1,17 +1,49 @@
 # Backlog
 
-## Next
+This is a directional backlog, not a delivery commitment. Prefer validated vertical slices.
 
-- Add progress history and audit events after durable persistence exists.
-- Add phase due dates and milestone dependencies.
-- Add a separate ServiceNow release export source.
+## Next candidate increments
+
+1. Define Release identity, schedule, and milestone metadata without implementing a general backend prematurely.
+2. Add a read-only User Story slice from an approved VersionOne export or fixture.
+3. Relate normalized User Stories to Release and RAID scope.
+4. Add phase due dates and milestone dependencies.
+5. Add one read-only testing slice from ALM data.
+
+## Platform foundations to validate
+
+- Source reference and provenance model
+- Connector diagnostics and unknown-field handling
+- Cross-system identity and relationship ownership
+- Refresh, conflict, stale-record, and deletion behavior
+- Durable ShipCommand-owned metadata
+- Authentication and authorization requirements
+- Audit and history expectations
+
+## Planned modules
+
+- Story delivery
+- Testing and results
+- ServiceNow change governance
+- SharePoint documentation and approvals
+- Financial estimates and funding
+- Scheduling and dependencies
+- Portfolio reporting and retrospective analytics
 
 ## Deferred
 
-- RAID item splitting and split identifiers such as `RAID ID 417.1`.
-- Links, followed later by true file attachments.
-- Configurable Settings lists.
-- Settings-based microservice reference-data management.
-- Settings-based involvement-type and phase reference-data management.
-- Release-level phase matrix.
-- Backend or durable persistence.
+- Enterprise-system write-back
+- Full release-by-service-by-phase matrix
+- Progress history and audit events before persistence
+- RAID splitting and split identifiers such as `RAID ID 417.1`
+- Links followed by true file attachments
+- Configurable Settings and reference-data administration
+- Notifications and approval workflows
+- Production deployment
+
+## Guardrails
+
+- Do not replace systems of record.
+- Do not duplicate derived release state.
+- Do not create a universal connector abstraction before a second real integration validates it.
+- Do not modify the root `backlog.md` as part of this documentation set.

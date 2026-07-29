@@ -1,30 +1,50 @@
 # Decisions
 
-- Release tracker data is derived from RAID item state for the POC; no duplicate release-feature persistence is introduced.
-- Release values currently come from `BacklogData.xlsx`. A separate ServiceNow release export will be added later.
-- Microservices are controlled reference data with stable IDs.
-- `serviceAssignments` are the RAID item source of truth and may change at any point.
-- Release views derive service information from RAID state; no release-specific assignment store exists.
-- Workbook service strings are normalized during import. Explicit names and aliases map to controlled IDs; unknown labels are preserved and shown as unmapped.
-- Current preserved source labels outside the controlled list include IV-MTR/IVMTR, ServiceNow, EPS, EMAS, COP, App Support, Tech Arch, CDAO, and other low-frequency team or system labels. They are not fuzzy-matched.
-- Involvement types and delivery phases are controlled reference data with stable IDs.
-- Applicable phase IDs are stored per service assignment; duplicate and stale IDs are normalized.
-- Full Delivery is the default imported assignment. Explicit test-only aliases use Testing Support.
-- CAT Ready and CAT Execution remain distinct, independently selectable phases.
-- Settings-based reference-data management is deferred.
-- `phaseProgress` is stored within each service assignment; the trackable unit is RAID + microservice + phase.
-- Progress combines a controlled status, an integer percentage, and an optional note.
+## Product and platform
+
+- ShipCommand is a Release Operations Platform organized primarily around the Release.
+- Portfolio views complement release-centered navigation.
+- The product connects a release digital thread without replacing enterprise systems.
+- Business object names are source-independent: User Story, Change Record, Test Case, Document, Approval, and Estimate.
+- Systems of record remain authoritative; read-only integration precedes write-back.
+- ShipCommand may own relationships, planning metadata, notes, schedules, and rollups where no appropriate authority exists.
+
+## Architecture
+
+- Source-specific authentication, queries, schemas, and mappings belong in isolated connectors.
+- Core domain and selectors must not depend on enterprise product field shapes.
+- Derived release summaries and progress are not duplicated as mutable state.
+- Implement small vertical slices and defer speculative enterprise abstractions.
+- The current product remains a local static POC with in-memory state and workbook input.
+
+## Current domain behavior
+
+- Release values currently come from `BacklogData.xlsx`.
+- Microservices, involvement types, delivery phases, and progress statuses use controlled stable IDs.
+- Service assignments are the RAID item source of truth and may change at any point.
+- Workbook service strings use exact names and aliases; unknown labels are preserved without fuzzy matching.
+- Full Delivery is the import default; explicit test-only aliases use Testing Support.
+- CAT Ready and CAT Execution are distinct phases.
+- Phase progress is stored at RAID + microservice + phase.
 - Complete equals 100%; Not Started equals 0%; Blocked may retain partial progress.
-- Not Applicable phases are excluded from service, RAID, and release rollups.
-- Service, RAID, and release progress are derived. Release views contain no duplicate mutable progress state.
-- The full release phase matrix remains deferred.
-- Release phase summaries are derived from RAID service-phase progress; no duplicate release phase state exists.
-- Release phase filtering is local UI state and uses per-RAID phase rollups.
-- The initial Needs Attention summary reports blocked phases without speculative risk scoring.
-- Release-card active-phase counts include countable Not Started and In Progress phases; blocked and complete phases are reported separately.
-- Release overview uses a compact list rather than cards and sorts numeric release segments descending. `Rx.x.x` is always first.
-- Phase due dates, dependencies, notifications, and progress history are deferred.
-- Release reassignment moves the item to the selected release for the MVP.
-- True file attachments are deferred; links will be supported first.
-- RAID item splitting is deferred.
-- Configurable Settings lists are deferred.
+- Not Applicable is excluded from rollups.
+- Release phase summaries and filtering derive from service-phase progress.
+- Needs Attention initially reports blocked phases without speculative risk scoring.
+
+## Current UI
+
+- Release overview is a compact list.
+- `Rx.x.x` sorts first; numeric release segments sort descending.
+- Phase filtering is local UI state.
+- Release reassignment moves the item for the POC.
+
+## Deferred decisions
+
+- Persistence, identity, authorization, deployment, and operational support
+- Connector contract beyond the needs proven by real sources
+- Write-back and conflict resolution
+- Full release phase matrix
+- Phase dates, dependencies, notifications, and history
+- RAID splitting, attachments, configurable Settings, and approval execution
+
+See [System Boundaries](SYSTEM_BOUNDARIES.md) and [System Architecture](SYSTEM_ARCHITECTURE.md).

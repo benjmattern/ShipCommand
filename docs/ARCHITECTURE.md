@@ -1,4 +1,6 @@
-# Architecture
+# Current Implementation Architecture
+
+This document maps the implemented browser POC. For the broader platform blueprint, see [System Architecture](SYSTEM_ARCHITECTURE.md).
 
 - `App.tsx` owns the single in-memory RAID item array and all CRUD and priority mutations.
 - `connectors.ts` parses `BacklogData.xlsx` into the shared `DataRecord` model.
@@ -23,3 +25,5 @@ Release views derive assignment summaries from RAID state; no separate `ReleaseF
 `releasePhaseSelectors.ts` derives ordered release phase summaries and per-RAID phase rollups from service-phase progress. Not Applicable entries are excluded. Phase-filter selection is local component state; no release phase data is persisted separately.
 
 Future identity work should store the base RAID number separately from its label. That migration can later support split identifiers such as `RAID ID 417.1` without changing the visible formatting contract.
+
+This structure is not a commitment to a future backend or database design. Planned business objects and connector boundaries are documented in [Domain Model](DOMAIN_MODEL.md) and [Data Integrations](DATA_INTEGRATIONS.md).
