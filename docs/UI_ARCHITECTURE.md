@@ -2,7 +2,7 @@
 
 ## Current structure
 
-The React POC uses local component state and CSS. `App.tsx` owns the RAID array and switches between RAID and Releases views without React Router. Modal state supports create, read, update, and delete workflows.
+The React POC uses local component state and CSS. `App.tsx` owns the RAID array and switches among RAID, Releases, and Diagnostics views without React Router. Modal state supports create, read, update, and delete workflows.
 
 ## Views
 
@@ -10,6 +10,7 @@ The React POC uses local component state and CSS. `App.tsx` owns the RAID array 
 - **Releases overview:** compact, accessible release rows with semantically sorted metrics.
 - **Release detail:** Schedule display and editor followed by phase summary, attention summary, phase filter, and derived feature table.
 - **RAID modal:** details plus service, involvement, phase applicability, and progress editing.
+- **Diagnostics:** Enterprise Connections contains a VersionOne direct-browser connectivity card.
 
 ## State principles
 
@@ -18,6 +19,13 @@ The React POC uses local component state and CSS. `App.tsx` owns the RAID array 
 - Release and progress UI is derived.
 - View, selected release, selected phase, modal, and drag state are local UI concerns.
 - No router or state library is justified by current scope.
+- Diagnostic status and sanitized result metadata remain session-only in the VersionOne card.
+
+## Enterprise connectivity diagnostics
+
+Diagnostics is a top-level POC navigation view designed to accept additional enterprise connection tests over time. The first card performs a credential-free, read-only VersionOne browser request and displays status, timing, readable HTTP metadata, response size, and format indicators.
+
+The response body is inspected only inside the request helper, discarded immediately, and never displayed, logged, or persisted. The UI does not request credentials or expose enterprise story content.
 
 ## Accessibility and responsiveness
 

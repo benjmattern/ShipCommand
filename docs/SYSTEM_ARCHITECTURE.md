@@ -25,6 +25,22 @@ RAID and Release views
 
 The personal development computer builds `dist/`. The work computer serves those static files using Python `http.server`.
 
+## Direct-browser enterprise diagnostic — under evaluation
+
+The VersionOne feasibility spike currently tests a read-only cross-origin browser path:
+
+```text
+ShipCommand static app
+http://localhost:8000
+        ↓ browser fetch with existing browser credentials
+VersionOne REST API
+https://versionone.usps.gov
+```
+
+Direct navigation to the VersionOne XML endpoint has been verified on the USPS work computer. The in-application diagnostic now evaluates whether JavaScript served from localhost can read that response under VersionOne authentication and browser CORS policy. This path is diagnostic and is not an approved production integration.
+
+No proxy is implemented. If the browser cannot read the response, a local Python adapter remains a possible next feasibility step.
+
 ## Target logical architecture — vision
 
 ```text

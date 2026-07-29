@@ -52,6 +52,11 @@
 - Explicit CAT Ready edits normalize to exactly 0 or 100.
 - Existing aggregate calculations remain numeric and unchanged, and planning schedules remain separate from phase execution.
 - Additional metric modes are deferred until a concrete use case requires them.
+- Enterprise connectivity diagnostics are a permanent ShipCommand capability; VersionOne is the first diagnostic.
+- The first VersionOne spike tests a read-only direct-browser request from localhost.
+- Diagnostics neither request nor store credentials, and full response bodies are discarded rather than displayed or persisted.
+- A local Python proxy remains a possible next spike if browser CORS or authentication prevents direct access.
+- A generic connector framework is deferred until real integrations establish shared requirements.
 
 ## Current UI
 

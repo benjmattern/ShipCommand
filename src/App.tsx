@@ -10,6 +10,7 @@ import { getProgressStatusName } from './progressStatuses';
 import { ServiceAssignmentEditor } from './ServiceAssignmentEditor';
 import { normalizeServiceAssignments } from './serviceAssignments';
 import type { DataRecord, ServiceAssignment } from './types';
+import { DiagnosticsPage } from './diagnostics/DiagnosticsPage';
 
 type ModalState =
   | { mode: 'view'; record: DataRecord }
@@ -32,7 +33,7 @@ function insertAtPriority(items: DataRecord[], record: DataRecord, requestedPrio
 
 function App() {
   const [records, setRecords] = useState<DataRecord[]>([]);
-  const [activeView, setActiveView] = useState<'raid' | 'releases'>('raid');
+  const [activeView, setActiveView] = useState<'raid' | 'releases' | 'diagnostics'>('raid');
   const [selectedRelease, setSelectedRelease] = useState('all');
   const [modal, setModal] = useState<ModalState>(null);
   const [draggedId, setDraggedId] = useState<string | null>(null);
@@ -146,6 +147,7 @@ function App() {
         <nav aria-label="Primary navigation">
           <button className={`nav-item ${activeView === 'raid' ? 'active' : ''}`} type="button" onClick={() => setActiveView('raid')}>▦ <span>RAID dashboard</span></button>
           <button className={`nav-item ${activeView === 'releases' ? 'active' : ''}`} type="button" onClick={() => setActiveView('releases')}>□ <span>Releases</span></button>
+          <button className={`nav-item ${activeView === 'diagnostics' ? 'active' : ''}`} type="button" onClick={() => setActiveView('diagnostics')}>○ <span>Diagnostics</span></button>
           <button className="nav-item" type="button" disabled>✓ <span>Approvals</span></button>
           <button className="nav-item" type="button" disabled>⚙ <span>Settings</span></button>
         </nav>
@@ -156,10 +158,12 @@ function App() {
         <header className="page-header">
           <div>
             <p className="eyebrow">Release documentation tracking</p>
-            <h1>{activeView === 'raid' ? 'RAID dashboard' : 'Release tracker'}</h1>
+            <h1>{activeView === 'raid' ? 'RAID dashboard' : activeView === 'releases' ? 'Release tracker' : 'Diagnostics'}</h1>
             <p>{activeView === 'raid'
               ? 'Review and manage release risks, actions, issues, and decisions.'
-              : 'Explore release features derived directly from the current RAID register.'}</p>
+              : activeView === 'releases'
+                ? 'Explore release features derived directly from the current RAID register.'
+                : 'Test connectivity from this locally running ShipCommand instance to enterprise systems.'}</p>
           </div>
           {activeView === 'raid' && <button className="primary-button" type="button" onClick={() => setModal({ mode: 'create' })}>
             <span>＋</span> New RAID item
@@ -237,8 +241,10 @@ function App() {
             {loadState === 'ready' && filteredRecords.length === 0 && <p className="empty-state">No RAID items match this release.</p>}
           </div>
         </section>
-        </> : (
+        </> : activeView === 'releases' ? (
           <ReleaseTracker records={records} loadState={loadState} onOpenRecord={(record) => setModal({ mode: 'view', record })} />
+        ) : (
+          <DiagnosticsPage />
         )}
       </main>
 

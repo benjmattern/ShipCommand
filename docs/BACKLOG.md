@@ -8,14 +8,19 @@ This is a directional backlog, not a delivery commitment. Prefer validated verti
 2. **Complete:** Read-only Release Schedule display, including the overall Release window, ordered phase dates, and partial and empty states.
 3. **Complete:** Session-only Release Schedule creation, overall and phase editing, isolated draft cancellation, structural validation messages, clear behavior, and normalized in-memory state.
 4. **Complete:** Phase progress-mode metadata, Boolean CAT Ready display and editing, numeric compatibility helpers, and rollup compatibility review.
-5. Add Release/phase boundary warnings and phase-overlap warnings.
-6. Add actual dates and schedule variance.
-7. Add a read-only User Story slice from an approved VersionOne export or fixture.
-8. Relate normalized User Stories to Release and RAID scope.
-9. Add one read-only testing slice from ALM data.
+5. **Complete:** Diagnostics page, Enterprise Connections section, credential-free VersionOne browser test, and sanitized HTTP results.
+6. Validate VersionOne CORS and authentication behavior on the USPS work computer.
+7. Add Release/phase boundary warnings and phase-overlap warnings.
+8. Add actual dates and schedule variance.
+9. Add a read-only User Story slice from an approved VersionOne export or fixture.
+10. Relate normalized User Stories to Release and RAID scope.
+11. Add one read-only testing slice from ALM data.
 
 ## Platform foundations to validate
 
+- Determine whether direct VersionOne browser access is viable; spike a local Python proxy if required
+- Parse VersionOne XML, define the normalized Story contract, add paging, and display selected-Release stories
+- Match normalized VersionOne stories to ShipCommand records and define a production integration approach
 - Source reference and provenance model
 - Connector diagnostics and unknown-field handling
 - Cross-system identity and relationship ownership
