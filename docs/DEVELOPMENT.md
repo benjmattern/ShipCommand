@@ -24,7 +24,7 @@ To create the committed static build used by the work computer:
 git pull
 .\scripts\build-demo.ps1
 git status
-git add demo scripts/build-demo.ps1 package.json docs/DEVELOPMENT.md
+git add demo scripts tests src/diagnostics docs package.json
 git commit -m "Refresh work-computer demo build"
 git push origin main
 ```
@@ -39,11 +39,12 @@ Pull the committed static demo build and serve it:
 
 ```text
 git pull
-cd demo
-python -m http.server 8000
+python .\scripts\serve-shipcommand.py
 ```
 
-Open `http://localhost:8000` in a browser. Serving files over HTTP is required for workbook fetch and Diagnostics behavior; opening `index.html` directly is not the supported workflow. npm is not required on the work computer.
+Open `http://localhost:8000` in a browser. The Python standard-library server locates and serves the committed `demo/` build and exposes same-origin Local Integration API routes. Use Ctrl+C to stop it. A custom port can be supplied with `--port`.
+
+Python is required on the work computer; npm is not. Sign into VersionOne in the browser if needed for normal navigation, but the server diagnostic uses the current Windows user’s default credentials through a controlled PowerShell request rather than forwarding browser cookies. Do not enter a password or token into ShipCommand.
 
 ## Validation expectations
 

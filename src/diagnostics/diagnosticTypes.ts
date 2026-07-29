@@ -12,4 +12,5 @@ export interface ConnectionTestResult {
   responseLooksLikeVersionOne: boolean | null;
   message: string;
   technicalDetail: string | null;
+  requestPath: 'local-api' | null;
 }

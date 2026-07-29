@@ -16,8 +16,9 @@ const initialResult: ConnectionTestResult = {
   responseSizeBytes: null,
   responseLooksLikeXml: null,
   responseLooksLikeVersionOne: null,
-  message: 'Run the test to check direct browser connectivity.',
+  message: 'Run the test through the ShipCommand Local Integration API.',
   technicalDetail: null,
+  requestPath: null,
 };
 
 const statusLabels: Record<ConnectionTestResult['status'], string> = {
@@ -40,7 +41,7 @@ export function VersionOneDiagnosticCard() {
   async function runTest() {
     if (running.current) return;
     running.current = true;
-    setResult({ ...initialResult, status: 'testing', message: 'Testing direct browser connectivity to VersionOne…' });
+    setResult({ ...initialResult, status: 'testing', message: 'Testing VersionOne through the ShipCommand Local Integration API…' });
     const nextResult = await runVersionOneConnectionTest();
     setResult(nextResult);
     running.current = false;
@@ -59,7 +60,8 @@ export function VersionOneDiagnosticCard() {
       </div>
 
       <dl className="diagnostic-context">
-        <div><dt>Endpoint</dt><dd>{versionOneStoryEndpoint}</dd></div>
+        <div><dt>Connection path</dt><dd>ShipCommand → Local Integration API → VersionOne</dd></div>
+        <div><dt>VersionOne endpoint</dt><dd>{versionOneStoryEndpoint}<small>The browser calls only the same-origin local API.</small></dd></div>
         <div><dt>Release test scope</dt><dd>{versionOneDiagnosticRelease}</dd></div>
       </dl>
 
@@ -77,6 +79,7 @@ export function VersionOneDiagnosticCard() {
           <div><dt>Response size</dt><dd>{result.responseSizeBytes === null ? 'Not available' : `${result.responseSizeBytes.toLocaleString()} bytes`}</dd></div>
           <div><dt>XML detected</dt><dd>{yesNo(result.responseLooksLikeXml)}</dd></div>
           <div><dt>VersionOne response detected</dt><dd>{yesNo(result.responseLooksLikeVersionOne)}</dd></div>
+          <div><dt>Request path</dt><dd>{result.requestPath === 'local-api' ? 'Local Integration API' : 'Not available'}</dd></div>
         </dl>
       )}
 

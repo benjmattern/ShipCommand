@@ -9,7 +9,7 @@
 
 ## Current architecture — implemented
 
-ShipCommand is a static React + TypeScript + Vite browser application. It loads RAID data from `BacklogData.xlsx`, normalizes it into in-memory domain records, and derives release summaries, phase rollups, filters, and progress views through pure selectors. `App.tsx` owns mutable session state. There is no backend, authentication, shared database, live API, or enterprise-system write-back.
+ShipCommand has a static React + TypeScript + Vite browser UI. It loads RAID data from `BacklogData.xlsx`, normalizes it into in-memory domain records, and derives release summaries, phase rollups, filters, and progress views through pure selectors. `App.tsx` owns mutable session state. A dependency-free local Python server now serves the UI and one diagnostic API route; there is no production backend, shared database, normalized live enterprise data, or enterprise-system write-back.
 
 ```text
 BacklogData.xlsx
@@ -23,23 +23,26 @@ Pure selectors and rollups
 RAID and Release views
 ```
 
-The personal development computer builds `dist/`. The work computer serves those static files using Python `http.server`.
+The personal development computer builds `dist/`. The work computer runs the Python Local Integration API, which serves the committed `demo/` build.
 
-## Direct-browser enterprise diagnostic — under evaluation
+## Local Integration API — VersionOne Connectivity v1
 
-The VersionOne feasibility spike currently tests a read-only cross-origin browser path:
+The direct-browser VersionOne spike failed on the USPS work computer with `TypeError: Failed to fetch` and no readable HTTP response. Direct navigation still returned XML, proving browser-session and network access but not JavaScript cross-origin access.
 
 ```text
 ShipCommand static app
 http://localhost:8000
-        ↓ browser fetch with existing browser credentials
+        ↓ same-origin JSON
+ShipCommand Local Integration API
+Python standard-library static/API server
+        ↓ controlled PowerShell request with Windows default credentials
 VersionOne REST API
 https://versionone.usps.gov
 ```
 
-Direct navigation to the VersionOne XML endpoint has been verified on the USPS work computer. The in-application diagnostic now evaluates whether JavaScript served from localhost can read that response under VersionOne authentication and browser CORS policy. This path is diagnostic and is not an approved production integration.
+React no longer calls VersionOne directly. `scripts/serve-shipcommand.py` serves the committed static demo and owns `/api/` routes. VersionOne authentication and XML inspection remain server-side; React receives only sanitized diagnostic JSON.
 
-No proxy is implemented. If the browser cannot read the response, a local Python adapter remains a possible next feasibility step.
+The current endpoint is diagnostic only. This is a local POC boundary, not an approved production-hosting model. ServiceNow and ALM may later use the same boundary, but no generic enterprise connector framework exists yet.
 
 ## Target logical architecture — vision
 

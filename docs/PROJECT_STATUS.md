@@ -25,19 +25,19 @@ ShipCommand is the foundation of a Release Operations Platform and unified relea
 - Release Planning Slice 2: read-only overall and ordered phase schedule display in Release Detail, including partial and empty states
 - Release Planning Slice 3: session-only schedule create, edit, save, cancel, clear, and structural validation UI
 - Phase Progress Modes: CAT Ready Boolean display and editing with numeric 0/100 compatibility and unchanged aggregate calculations
-- Diagnostics capability with a sanitized VersionOne direct-browser connectivity test
+- Local Integration API — VersionOne Connectivity v1: static/API Python server and same-origin sanitized diagnostic endpoint
 
 Seeded Releases show non-authoritative sample planning dates separately from the RAID workbook. Schedule CRUD is available for the current session; refresh restores seed values. Permanent persistence and planning-warning rules remain open.
 
 CAT Ready readiness is currently user-entered. Derived readiness, deployment verification, and external synchronization remain future work.
 
-The known VersionOne Story XML endpoint is configured for a five-record Release `27.0.0.0` diagnostic query. Direct browser navigation was previously verified on the USPS work computer; the in-app CORS and authentication result still requires work-computer validation. Story parsing, normalization, paging, and Release Tracker integration are not implemented.
+The direct-browser VersionOne diagnostic was tested on the USPS work computer and failed without a readable HTTP response. The local integration boundary is approved, `scripts/serve-shipcommand.py` serves the committed demo, and `/api/versionone/test` is available. Whether controlled PowerShell `-UseDefaultCredentials` succeeds against VersionOne still requires work-computer validation. Story parsing, normalization, paging, and Release Tracker integration are not implemented.
 
 ## Current operating constraints
 
-- No backend or durable/shared database
+- No production backend or durable/shared database
 - No authentication or authorization
-- No live enterprise API integration
+- No normalized live enterprise data integration; the VersionOne endpoint is diagnostic only
 - No scheduled synchronization
 - No enterprise-system write-back
 - No production hosting or support model

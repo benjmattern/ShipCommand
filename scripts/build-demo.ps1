@@ -130,15 +130,14 @@ try {
     Write-Host $demoPath
     Write-Host ""
     Write-Host "To run on the work computer:"
-    Write-Host "    cd demo"
-    Write-Host "    python -m http.server 8000"
+    Write-Host "    python .\scripts\serve-shipcommand.py"
     Write-Host ""
     Write-Host "Then open:"
     Write-Host "    http://localhost:8000"
     Write-Host ""
     Write-Host "Commit and push the refreshed demo before pulling it on the work computer:"
     Write-Host "    git status"
-    Write-Host "    git add demo scripts/build-demo.ps1 package.json docs/DEVELOPMENT.md"
+    Write-Host "    git add demo scripts tests src/diagnostics docs package.json"
     Write-Host '    git commit -m "Refresh work-computer demo build"'
     Write-Host "    git push origin main"
 }

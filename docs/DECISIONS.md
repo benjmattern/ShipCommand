@@ -15,7 +15,7 @@
 - Core domain and selectors must not depend on enterprise product field shapes.
 - Derived release summaries and progress are not duplicated as mutable state.
 - Implement small vertical slices and defer speculative enterprise abstractions.
-- The current product remains a local static POC with in-memory state and workbook input.
+- The current product remains a local POC with a static UI, in-memory state, workbook input, and a dependency-free diagnostic Local Integration API.
 
 ## Current domain behavior
 
@@ -53,9 +53,12 @@
 - Existing aggregate calculations remain numeric and unchanged, and planning schedules remain separate from phase execution.
 - Additional metric modes are deferred until a concrete use case requires them.
 - Enterprise connectivity diagnostics are a permanent ShipCommand capability; VersionOne is the first diagnostic.
-- The first VersionOne spike tests a read-only direct-browser request from localhost.
-- Diagnostics neither request nor store credentials, and full response bodies are discarded rather than displayed or persisted.
-- A local Python proxy remains a possible next spike if browser CORS or authentication prevents direct access.
+- Direct-browser VersionOne access was rejected after the work-computer test returned `TypeError: Failed to fetch` with no readable response.
+- Direct browser navigation returning XML proved network and browser-session access, not JavaScript cross-origin access.
+- ShipCommand uses a Local Integration API boundary implemented with Python standard-library components for the work-computer POC.
+- Windows default credentials are tested through a fixed, controlled PowerShell request.
+- React receives sanitized JSON only; XML, credentials, and enterprise authentication remain outside React.
+- No third-party Python packages or PowerShell modules are introduced.
 - A generic connector framework is deferred until real integrations establish shared requirements.
 
 ## Current UI
