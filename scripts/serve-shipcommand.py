@@ -230,8 +230,9 @@ def run_versionone_stories(release: str) -> dict[str, Any]:
         )
     return retrieve_all_stories(
         release,
-        fetch_page=lambda validated_release, offset: retrieve_versionone_page(
+        fetch_page=lambda validated_release, asset_type, offset: retrieve_versionone_page(
             validated_release,
+            asset_type,
             offset,
             powershell_executable=executable,
         ),

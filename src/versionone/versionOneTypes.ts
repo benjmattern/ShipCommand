@@ -1,8 +1,11 @@
+export type VersionOneRecordType = 'story' | 'defect' | 'other';
+
 export interface VersionOneStory {
   id: string;
   oid: string | null;
   href: string | null;
   number: string | null;
+  recordType: VersionOneRecordType;
   name: string;
   assetState: string | null;
   status: string | null;
@@ -13,7 +16,10 @@ export interface VersionOneStory {
 
 export interface VersionOneStoriesResponse {
   release: string;
+  recordCount: number;
   storyCount: number;
+  defectCount: number;
+  otherCount: number;
   pageCount: number;
   retrievedAt: string;
   durationMs: number;

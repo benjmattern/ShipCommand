@@ -27,12 +27,13 @@ ShipCommand is the foundation of a Release Operations Platform and unified relea
 - Phase Progress Modes: CAT Ready Boolean display and editing with numeric 0/100 compatibility and unchanged aggregate calculations
 - Local Integration API — VersionOne Connectivity v1: static/API Python server and same-origin sanitized diagnostic endpoint
 - VersionOne Story Retrieval v1: R29 paging, XML parsing, normalized Story JSON, and read-only Story Explorer
+- VersionOne Defect Story Support: combined Story/Defect retrieval, server-side type classification, counts, Type badges, and filtering
 
 Seeded Releases show non-authoritative sample planning dates separately from the RAID workbook. Schedule CRUD is available for the current session; refresh restores seed values. Permanent persistence and planning-warning rules remain open.
 
 CAT Ready readiness is currently user-entered. Derived readiness, deployment verification, and external synchronization remain future work.
 
-VersionOne connectivity through controlled PowerShell default credentials is proven on the USPS work computer. `/api/versionone/stories` and the Story Explorer are implemented for R29. Full real-data validation remains pending; RAID matching and Release Tracker integration remain deferred.
+VersionOne connectivity through controlled PowerShell default credentials is proven on the USPS work computer. `/api/versionone/stories` and the Story Explorer are implemented for R29, including fixed upstream Story and Defect asset requests merged into one collection. Live work-computer validation of Defect XML conventions and representative B-/D- data remains pending; RAID matching and Release Tracker integration remain deferred.
 
 ## Current operating constraints
 

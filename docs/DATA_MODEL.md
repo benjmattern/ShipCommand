@@ -63,11 +63,13 @@ Editable schedule state is initialized from normalized deep copies of the immuta
 
 `connectors.ts` loads `BacklogData.xlsx` through XLSX. Service strings are split and matched case-insensitively through an explicit alias map. Controlled values become service assignments. Unknown values are preserved separately rather than guessed or discarded.
 
-## VersionOne Story
+## VersionOne delivery record
 
-The Local Integration API exposes external, read-only Stories with `id`, nullable `oid`, `href`, `number`, `assetState`, `status`, `releaseName`, and `teamName`, a required string `name`, and `ownerNames[]`. The stable `id` uses the first available VersionOne OID, Href, or Number. Missing scalar values become `null`; Owners become an array.
+The Local Integration API exposes external, read-only Stories and Defects with `id`, nullable `oid`, `href`, `number`, `assetState`, `status`, `releaseName`, and `teamName`, a required string `name`, `ownerNames[]`, and `recordType`. The stable `id` uses the first available VersionOne OID, Href, or Number. Missing scalar values become `null`; Owners become an array.
 
-The response includes Release, Story count, page count, retrieval time, and duration. Stories are not persisted and raw XML is excluded.
+`recordType` is normalized server-side: numbers beginning with `B-` are `story`, numbers beginning with `D-` are `defect`, and missing or unexpected prefixes are retained as `other`. Classification is case-insensitive while the original Number is preserved.
+
+The response includes Release, total, Story, Defect, and Other counts, total upstream page count, retrieval time, and duration. Records are not persisted and raw XML is excluded.
 
 ## Derived projections
 

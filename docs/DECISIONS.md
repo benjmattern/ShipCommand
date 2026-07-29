@@ -65,6 +65,9 @@
 - Paging uses a fixed size of 100, a 100-page safety cap, and strict numeric Release validation.
 - Raw XML is neither persisted nor returned to React.
 - The read-only Story Explorer precedes Story-to-RAID, Story-to-Feature, and Release mapping work.
+- VersionOne `Story` and `Defect` assets are retrieved through fixed server-controlled requests and returned as one normalized collection.
+- Record classification occurs in Python: `B-` is Story, `D-` is Defect, and unexpected or missing prefixes remain visible as Other rather than being discarded.
+- A future Release Catalog, release synchronization, and stable RAID governance identifier are documented directions; the governance field or tag mechanism remains undecided.
 
 ## Current UI
 

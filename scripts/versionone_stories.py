@@ -1,4 +1,4 @@
-"""VersionOne Story retrieval, paging, XML parsing, and normalization."""
+"""VersionOne Story and Defect retrieval, paging, XML parsing, and normalization."""
 
 from __future__ import annotations
 
@@ -17,6 +17,7 @@ DEFAULT_VERSIONONE_RELEASE = "29.0.0.0"
 RELEASE_PATTERN = re.compile(r"^\d+\.\d+\.\d+\.\d+$")
 PAGE_SIZE = 100
 MAX_PAGES = 100
+ASSET_TYPES = ("Story", "Defect")
 PAGE_HELPER = Path(__file__).resolve().parent / "get-versionone-page.ps1"
 PAGE_TIMEOUT_SECONDS = 35
 
@@ -68,6 +69,15 @@ def extract_value(asset: ET.Element, name: str) -> str | None:
     return values[0] if values else None
 
 
+def classify_record_type(number: str | None) -> str:
+    normalized_number = (number or "").lower()
+    if normalized_number.startswith("b-"):
+        return "story"
+    if normalized_number.startswith("d-"):
+        return "defect"
+    return "other"
+
+
 def parse_versionone_story_xml(xml_text: str) -> list[dict[str, Any]]:
     try:
         root = ET.fromstring(xml_text)
@@ -88,7 +98,7 @@ def parse_versionone_story_xml(xml_text: str) -> list[dict[str, Any]]:
         if local_name(asset.tag) != "Asset":
             continue
         oid = asset.attrib.get("id") or asset.attrib.get("oid") or extract_value(asset, "OID")
-        if oid and not oid.lower().startswith("story:"):
+        if oid and not oid.lower().startswith(("story:", "defect:")):
             continue
         href = asset.attrib.get("href") or extract_value(asset, "Href")
         number = extract_value(asset, "Number")
@@ -100,6 +110,7 @@ def parse_versionone_story_xml(xml_text: str) -> list[dict[str, Any]]:
             "oid": oid,
             "href": href,
             "number": number,
+            "recordType": classify_record_type(number),
             "name": extract_value(asset, "Name") or "",
             "assetState": extract_value(asset, "AssetState"),
             "status": extract_value(asset, "Status.Name"),
@@ -112,11 +123,14 @@ def parse_versionone_story_xml(xml_text: str) -> list[dict[str, Any]]:
 
 def retrieve_versionone_page(
     release: str,
+    asset_type: str,
     offset: int,
     *,
     powershell_executable: str,
     run_process: Callable[..., subprocess.CompletedProcess[str]] = subprocess.run,
 ) -> str:
+    if asset_type not in ASSET_TYPES:
+        raise ValueError("Unsupported VersionOne asset type.")
     command = [
         powershell_executable,
         "-NoProfile",
@@ -125,6 +139,8 @@ def retrieve_versionone_page(
         "Bypass",
         "-File",
         str(PAGE_HELPER),
+        "-AssetType",
+        asset_type,
         "-Release",
         release,
         "-PageSize",
@@ -193,36 +209,51 @@ def retrieve_versionone_page(
 def retrieve_all_stories(
     release: str,
     *,
-    fetch_page: Callable[[str, int], str],
+    fetch_page: Callable[[str, str, int], str],
 ) -> dict[str, Any]:
     release = validate_release(release)
     started_at = time.monotonic()
     stories_by_id: dict[str, dict[str, Any]] = {}
     page_count = 0
 
-    for page_index in range(MAX_PAGES):
-        offset = page_index * PAGE_SIZE
-        page_stories = parse_versionone_story_xml(fetch_page(release, offset))
-        if not page_stories:
-            break
-        page_count += 1
-        for story in page_stories:
-            stories_by_id.setdefault(story["id"], story)
-        if len(page_stories) < PAGE_SIZE:
-            break
-    else:
-        raise VersionOneStoriesError(
-            "VersionOne stories could not be retrieved.",
-            f"Paging exceeded the safety limit of {MAX_PAGES} pages.",
+    for asset_type in ASSET_TYPES:
+        for page_index in range(MAX_PAGES):
+            offset = page_index * PAGE_SIZE
+            page_stories = parse_versionone_story_xml(fetch_page(release, asset_type, offset))
+            if not page_stories:
+                break
+            page_count += 1
+            for story in page_stories:
+                stories_by_id.setdefault(story["id"], story)
+            if len(page_stories) < PAGE_SIZE:
+                break
+        else:
+            raise VersionOneStoriesError(
+                "VersionOne stories could not be retrieved.",
+                f"{asset_type} paging exceeded the safety limit of {MAX_PAGES} pages.",
+            )
+
+    def natural_record_key(story: dict[str, Any]) -> tuple[Any, ...]:
+        number_parts = re.split(r"(\d+)", (story["number"] or "").lower())
+        natural_number = tuple(
+            (0, int(part)) if part.isdigit() else (1, part)
+            for part in number_parts
         )
+        return natural_number, story["name"].lower(), story["id"]
 
     stories = sorted(
         stories_by_id.values(),
-        key=lambda story: ((story["number"] or "").lower(), story["name"].lower(), story["id"]),
+        key=natural_record_key,
     )
+    story_count = sum(story["recordType"] == "story" for story in stories)
+    defect_count = sum(story["recordType"] == "defect" for story in stories)
+    other_count = len(stories) - story_count - defect_count
     return {
         "release": release,
-        "storyCount": len(stories),
+        "recordCount": len(stories),
+        "storyCount": story_count,
+        "defectCount": defect_count,
+        "otherCount": other_count,
         "pageCount": page_count,
         "retrievedAt": utc_timestamp(),
         "durationMs": round((time.monotonic() - started_at) * 1000),

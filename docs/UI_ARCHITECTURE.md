@@ -11,7 +11,7 @@ The React POC uses local component state and CSS. `App.tsx` owns the RAID array 
 - **Release detail:** Schedule display and editor followed by phase summary, attention summary, phase filter, and derived feature table.
 - **RAID modal:** details plus service, involvement, phase applicability, and progress editing.
 - **Diagnostics:** Enterprise Connections contains a VersionOne Local Integration API connectivity card.
-- **VersionOne Stories:** explicit load/refresh, retrieval summary, number/name search, status and team filters, and a read-only Story table.
+- **VersionOne Stories and Defects:** explicit load/refresh, retrieval summary, number/title search, type/status/team filters, and one read-only delivery-record table.
 
 ## State principles
 
@@ -30,7 +30,7 @@ The local API returns structured sanitized JSON, including a `local-api` request
 
 ## VersionOne Story Explorer
 
-VersionOne is a top-level view with local page state and no automatic startup load. Successful loads show R29 retrieval metadata and normalized Stories. Search covers Story number and name; status and team options derive from returned data. Loading, sanitized error/retry, empty-result, and no-filter-match states are explicit.
+VersionOne is a top-level view with local page state and no automatic startup load. Successful loads show R29 retrieval metadata plus total, Story, Defect, and optional Other counts. The unified table includes a Type badge and Title column. Search covers B-/D- numbers and titles; Type, status, and team filters combine with search, while status and team options derive from the complete returned collection. Loading, sanitized error/retry, empty-result, and no-filter-match states are explicit.
 
 ## Accessibility and responsiveness
 

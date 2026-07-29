@@ -12,11 +12,12 @@ This is a directional backlog, not a delivery commitment. Prefer validated verti
 6. **Complete:** Local Integration API server, committed-demo serving, `/api/versionone/test`, same-origin React diagnostic, and sanitized results.
 7. **Complete:** Validate PowerShell `-UseDefaultCredentials` connectivity on the USPS work computer.
 8. **Complete:** Switch inspection to R29, validate Release input, retrieve paged Stories, parse XML, normalize records, and add the read-only Story Explorer with search/status/team filters.
-9. Validate full R29 statuses, teams, owners, missing fields, duplicates, and anomalies.
-10. Determine Story-to-RAID and Story-to-Feature relationship rules.
-11. Add Release/phase boundary warnings and phase-overlap warnings.
-12. Add actual dates and schedule variance.
-13. Add one read-only testing slice from ALM data.
+9. **Complete:** Retrieve VersionOne Defects alongside Stories, classify B-/D-/Other records server-side, and add Type counts, badges, search, and filtering.
+10. Validate full R29 Story and Defect statuses, teams, owners, missing fields, duplicates, asset conventions, and anomalies.
+11. Determine Story/Defect-to-RAID and Story-to-Feature relationship rules and a governed stable identifier.
+12. Add Release/phase boundary warnings and phase-overlap warnings.
+13. Add actual dates and schedule variance.
+14. Add one read-only testing slice from ALM data.
 
 ## Platform foundations to validate
 
@@ -25,6 +26,7 @@ This is a directional backlog, not a delivery commitment. Prefer validated verti
 - Display selected-Release stories and associate them with ShipCommand Release and RAID records
 - Add ServiceNow and ALM integration slices after their access paths are validated
 - Add a VersionOne Release selector, detail links, and incremental refresh or caching only after R29 inspection
+- Add a VersionOne Release Catalog, configured-release synchronization, timestamps, and errors after the inspection slice
 - Source reference and provenance model
 - Connector diagnostics and unknown-field handling
 - Cross-system identity and relationship ownership

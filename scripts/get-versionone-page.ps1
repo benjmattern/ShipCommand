@@ -1,5 +1,9 @@
 param(
     [Parameter(Mandatory = $true)]
+    [ValidateSet("Story", "Defect")]
+    [string]$AssetType,
+
+    [Parameter(Mandatory = $true)]
     [ValidatePattern("^\d+\.\d+\.\d+\.\d+$")]
     [string]$Release,
 
@@ -15,7 +19,7 @@ param(
 $ErrorActionPreference = "Stop"
 [Console]::OutputEncoding = New-Object System.Text.UTF8Encoding($false)
 
-$endpoint = "https://versionone.usps.gov/v1/rest-1.v1/Data/Story"
+$endpoint = "https://versionone.usps.gov/v1/rest-1.v1/Data/$AssetType"
 $query = @{
     sel = "Name,Number,AssetState,Status.Name,Scope.Name,Team.Name,Owners.Name"
     where = "Scope.Name='$Release'"
