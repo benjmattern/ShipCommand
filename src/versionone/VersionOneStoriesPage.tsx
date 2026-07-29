@@ -1,31 +1,57 @@
-import { useMemo, useRef, useState } from 'react';
-import { loadVersionOneStories, versionOneInspectionRelease } from './versionOneApi';
+import { useMemo, useRef, useState, type FormEvent } from 'react';
+import { loadVersionOneStories } from './versionOneApi';
 import { filterVersionOneStories, naturalRecordNumberCompare, storyFilterOptions } from './versionOneFilters';
+import {
+  DEFAULT_VERSIONONE_RELEASE,
+  normalizeVersionOneRelease,
+  validateVersionOneRelease,
+} from './versionOneRelease';
 import type { VersionOneRecordType, VersionOneStoriesResponse } from './versionOneTypes';
 
 export function VersionOneStoriesPage() {
   const [result, setResult] = useState<VersionOneStoriesResponse | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [releaseInput, setReleaseInput] = useState(DEFAULT_VERSIONONE_RELEASE);
+  const [requestedRelease, setRequestedRelease] = useState<string | null>(null);
+  const [error, setError] = useState<{ release: string; message: string } | null>(null);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
   const [recordType, setRecordType] = useState<'' | VersionOneRecordType>('');
   const [status, setStatus] = useState('');
   const [team, setTeam] = useState('');
   const loadingRef = useRef(false);
+  const releaseValidation = validateVersionOneRelease(releaseInput);
 
-  async function loadStories() {
+  async function loadStories(release: string) {
     if (loadingRef.current) return;
+    const normalizedRelease = normalizeVersionOneRelease(release);
+    const validationError = validateVersionOneRelease(normalizedRelease);
+    if (validationError) return;
     loadingRef.current = true;
+    setRequestedRelease(normalizedRelease);
     setLoading(true);
     setError(null);
     try {
-      setResult(await loadVersionOneStories());
+      const response = await loadVersionOneStories(normalizedRelease);
+      setResult(response);
+      setSearch('');
+      setRecordType('');
+      setStatus('');
+      setTeam('');
     } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : 'VersionOne records could not be retrieved.');
+      setError({
+        release: normalizedRelease,
+        message: loadError instanceof Error ? loadError.message : 'VersionOne records could not be retrieved.',
+      });
     } finally {
       loadingRef.current = false;
+      setRequestedRelease(null);
       setLoading(false);
     }
+  }
+
+  function submitDraftRelease(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!releaseValidation && !loading) void loadStories(releaseInput);
   }
 
   const statuses = useMemo(() => storyFilterOptions(result?.stories ?? [], 'status'), [result]);
@@ -42,28 +68,50 @@ export function VersionOneStoriesPage() {
       <div className="versionone-toolbar">
         <div>
           <p className="eyebrow">Read-only enterprise data</p>
-          <h2>Release {versionOneInspectionRelease}</h2>
+          <h2>VersionOne Story Explorer</h2>
           <p>Stories and defects are retrieved through the ShipCommand Local Integration API.</p>
         </div>
-        <button className="primary-button" type="button" onClick={loadStories} disabled={loading}>
-          {loading ? 'Loading…' : result ? 'Refresh records' : 'Load records'}
-        </button>
+        <form className="versionone-release-form" onSubmit={submitDraftRelease}>
+          <label htmlFor="versionone-release">VersionOne Release</label>
+          <div>
+            <input
+              id="versionone-release"
+              value={releaseInput}
+              onChange={(event) => setReleaseInput(event.target.value)}
+              placeholder="29.0.0.0"
+              aria-describedby="versionone-release-help versionone-release-error"
+              aria-invalid={Boolean(releaseValidation)}
+              disabled={loading}
+            />
+            <button className="primary-button" type="submit" disabled={loading || Boolean(releaseValidation)}>
+              Load release
+            </button>
+            {result && (
+              <button className="secondary-button" type="button" onClick={() => void loadStories(result.release)} disabled={loading}>
+                Refresh loaded
+              </button>
+            )}
+          </div>
+          <small id="versionone-release-help">Format: 29.0.0.0</small>
+          {releaseValidation && <small className="field-error" id="versionone-release-error">{releaseValidation}</small>}
+        </form>
       </div>
 
       {error && (
         <div className="versionone-error" role="alert">
-          <strong>VersionOne records could not be loaded.</strong>
-          <p>{error}</p>
-          <button className="secondary-button" type="button" onClick={loadStories} disabled={loading}>Retry</button>
+          <strong>VersionOne records for {error.release} could not be retrieved.</strong>
+          <p>{error.message}</p>
+          <button className="secondary-button" type="button" onClick={() => void loadStories(error.release)} disabled={loading}>Retry {error.release}</button>
         </div>
       )}
 
       {!result && !error && !loading && <p className="empty-state standalone">VersionOne records have not been loaded.</p>}
-      {!result && loading && <p className="empty-state standalone" aria-live="polite">Loading VersionOne records…</p>}
+      {loading && requestedRelease && <p className="empty-state standalone" aria-live="polite">Loading VersionOne records for {requestedRelease}…</p>}
 
       {result && (
         <>
           <section className="versionone-summary" aria-label="VersionOne retrieval summary">
+            <div><strong>{result.release}</strong><span>Loaded release</span></div>
             <div><strong>{result.recordCount}</strong><span>Total</span></div>
             <div><strong>{result.storyCount}</strong><span>Stories</span></div>
             <div><strong>{result.defectCount}</strong><span>Defects</span></div>
@@ -73,16 +121,20 @@ export function VersionOneStoriesPage() {
             <div><strong>{new Date(result.retrievedAt).toLocaleString()}</strong><span>Retrieved</span></div>
           </section>
 
-          <div className="versionone-filters">
+          {result.recordCount === 0 ? (
+            <p className="empty-state standalone">No VersionOne Stories or Defects were found for release {result.release}.</p>
+          ) : (
+          <>
+            <div className="versionone-filters">
             <label>Search<input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Number or title" /></label>
             <label>Type<select value={recordType} onChange={(event) => setRecordType(event.target.value as '' | VersionOneRecordType)}><option value="">All Types</option><option value="story">Stories</option><option value="defect">Defects</option>{hasOtherRecords && <option value="other">Other</option>}</select></label>
             <label>Status<select value={status} onChange={(event) => setStatus(event.target.value)}><option value="">All statuses</option>{statuses.map((value) => <option key={value}>{value}</option>)}</select></label>
             <label>Team<select value={team} onChange={(event) => setTeam(event.target.value)}><option value="">All teams</option>{teams.map((value) => <option key={value}>{value}</option>)}</select></label>
             <span>{displayedStories.length} shown</span>
-          </div>
+            </div>
 
-          <section className="board">
-            <div className="table-wrap">
+            <section className="board">
+              <div className="table-wrap">
               <table className="versionone-table">
                 <thead><tr><th>Number</th><th>Type</th><th>Title</th><th>Status</th><th>Team</th><th>Owners</th><th>Asset State</th></tr></thead>
                 <tbody>
@@ -100,8 +152,10 @@ export function VersionOneStoriesPage() {
                 </tbody>
               </table>
               {displayedStories.length === 0 && <p className="empty-state">No VersionOne records match the current filters.</p>}
-            </div>
-          </section>
+              </div>
+            </section>
+          </>
+          )}
         </>
       )}
     </section>

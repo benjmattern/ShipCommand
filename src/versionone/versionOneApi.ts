@@ -1,6 +1,7 @@
 import type { VersionOneStoriesError, VersionOneStoriesResponse } from './versionOneTypes';
+import { DEFAULT_VERSIONONE_RELEASE } from './versionOneRelease';
 
-export const versionOneInspectionRelease = '29.0.0.0';
+export const versionOneInspectionRelease = DEFAULT_VERSIONONE_RELEASE;
 
 function isStoriesResponse(value: unknown): value is VersionOneStoriesResponse {
   if (!value || typeof value !== 'object') return false;
@@ -22,9 +23,11 @@ function isStoriesResponse(value: unknown): value is VersionOneStoriesResponse {
 }
 
 export async function loadVersionOneStories(
+  release: string,
   request: typeof fetch = fetch,
 ): Promise<VersionOneStoriesResponse> {
-  const path = `/api/versionone/stories?release=${encodeURIComponent(versionOneInspectionRelease)}`;
+  const params = new URLSearchParams({ release });
+  const path = `/api/versionone/stories?${params.toString()}`;
   const response = await request(path, {
     method: 'GET',
     headers: { Accept: 'application/json' },

@@ -46,7 +46,21 @@ The current endpoint is diagnostic only. This is a local POC boundary, not an ap
 
 ## VersionOne Story Retrieval v1
 
-`GET /api/versionone/stories` retrieves the current R29 inspection dataset. The server validates an optional four-segment numeric Release parameter, requests sequential fixed 100-record pages through controlled PowerShell authentication, and stops on a partial or empty page. Python parses each XML page once, normalizes and deduplicates Stories by stable ID, and returns JSON only. Raw XML never crosses the React boundary. Retrieval is capped at 100 pages and remains an uncached local POC operation.
+`GET /api/versionone/stories` retrieves an explicitly selected VersionOne release, defaulting to the initial R29 inspection value when omitted. The server authoritatively validates the optional four-segment numeric Release parameter, requests sequential fixed 100-record pages from the fixed Story and Defect endpoints through controlled PowerShell authentication, and stops on a partial or empty page. The browser cannot supply an upstream URL, asset type, selected fields, where clause, page controls, headers, credentials, or PowerShell text.
+
+Python parses each XML page once, normalizes and deduplicates records by stable ID, and returns JSON only. Raw XML never crosses the React boundary. Retrieval is capped at 100 pages per fixed asset type and remains an explicit, uncached, non-persistent local POC operation.
+
+Likely future architecture, not implemented:
+
+```text
+ShipCommand Release
+        ↓ configured VersionOne scope
+VersionOne Sync
+        ↓
+Story and Defect records
+        ↓ stable external identifiers
+Optional RAID linkage
+```
 
 ## Target logical architecture — vision
 

@@ -13,11 +13,12 @@ This is a directional backlog, not a delivery commitment. Prefer validated verti
 7. **Complete:** Validate PowerShell `-UseDefaultCredentials` connectivity on the USPS work computer.
 8. **Complete:** Switch inspection to R29, validate Release input, retrieve paged Stories, parse XML, normalize records, and add the read-only Story Explorer with search/status/team filters.
 9. **Complete:** Retrieve VersionOne Defects alongside Stories, classify B-/D-/Other records server-side, and add Type counts, badges, search, and filtering.
-10. Validate full R29 Story and Defect statuses, teams, owners, missing fields, duplicates, asset conventions, and anomalies.
-11. Determine Story/Defect-to-RAID and Story-to-Feature relationship rules and a governed stable identifier.
-12. Add Release/phase boundary warnings and phase-overlap warnings.
-13. Add actual dates and schedule variance.
-14. Add one read-only testing slice from ALM data.
+10. **Complete:** Query arbitrary validated VersionOne releases, switch the Story Explorer explicitly between releases, preserve Story/Defect retrieval, and provide release-specific loading, refresh, empty, and error behavior.
+11. Validate full R29 and an additional release: Story and Defect statuses, teams, owners, missing fields, duplicates, asset conventions, and anomalies.
+12. Determine Story/Defect-to-RAID and Story-to-Feature relationship rules and a governed stable identifier.
+13. Add Release/phase boundary warnings and phase-overlap warnings.
+14. Add actual dates and schedule variance.
+15. Add one read-only testing slice from ALM data.
 
 ## Platform foundations to validate
 
@@ -27,6 +28,9 @@ This is a directional backlog, not a delivery commitment. Prefer validated verti
 - Add ServiceNow and ALM integration slices after their access paths are validated
 - Add a VersionOne Release selector, detail links, and incremental refresh or caching only after R29 inspection
 - Add a VersionOne Release Catalog, configured-release synchronization, timestamps, and errors after the inspection slice
+- Map VersionOne scopes to ShipCommand releases and persist configured release mappings
+- Define automatic synchronization, sync timestamps, and sync error history
+- Select a RAID governance field and implement deterministic Story/Defect-to-RAID matching
 - Source reference and provenance model
 - Connector diagnostics and unknown-field handling
 - Cross-system identity and relationship ownership

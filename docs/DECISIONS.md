@@ -68,6 +68,10 @@
 - VersionOne `Story` and `Defect` assets are retrieved through fixed server-controlled requests and returned as one normalized collection.
 - Record classification occurs in Python: `B-` is Story, `D-` is Defect, and unexpected or missing prefixes remain visible as Other rather than being discarded.
 - A future Release Catalog, release synchronization, and stable RAID governance identifier are documented directions; the governance field or tag mechanism remains undecided.
+- VersionOne release selection is user-entered for the POC and uses four numeric segments without an `R` prefix.
+- Client validation improves feedback, while Local Integration API validation remains authoritative.
+- Draft release input and response-backed loaded release are separate UI states; changing input never relabels existing records.
+- Loading another release is explicit and read-only. Release catalog discovery and automatic synchronization remain deferred.
 
 ## Current UI
 

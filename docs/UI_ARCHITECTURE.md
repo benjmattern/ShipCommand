@@ -30,7 +30,9 @@ The local API returns structured sanitized JSON, including a `local-api` request
 
 ## VersionOne Story Explorer
 
-VersionOne is a top-level view with local page state and no automatic startup load. Successful loads show R29 retrieval metadata plus total, Story, Defect, and optional Other counts. The unified table includes a Type badge and Title column. Search covers B-/D- numbers and titles; Type, status, and team filters combine with search, while status and team options derive from the complete returned collection. Loading, sanitized error/retry, empty-result, and no-filter-match states are explicit.
+VersionOne is a top-level view with local page state and no automatic startup load. A labeled release input begins at `29.0.0.0`, validates four numeric segments client-side, and submits only explicit user-triggered loads. Draft input, the in-flight requested release, and the response-backed loaded release remain distinct: editing does not relabel current results, failure preserves prior results, and Refresh reloads the loaded release rather than an unrelated draft.
+
+Successful release changes reset search, Type, status, and team filters, then show release-specific retrieval metadata plus total, Story, Defect, and optional Other counts. The unified table includes a Type badge and Title column. Search covers B-/D- numbers and titles; Type, status, and team filters combine with search, while status and team options derive from the complete returned collection. Loading, sanitized release-specific error/retry, valid empty-release, and no-filter-match states are explicit.
 
 ## Accessibility and responsiveness
 

@@ -245,7 +245,10 @@ class StoriesApiTests(unittest.TestCase):
             self.calls.append(release)
             return {
                 "release": release,
+                "recordCount": 0,
                 "storyCount": 0,
+                "defectCount": 0,
+                "otherCount": 0,
                 "pageCount": 0,
                 "retrievedAt": "2026-07-29T20:00:00.000Z",
                 "durationMs": 1,
@@ -277,8 +280,18 @@ class StoriesApiTests(unittest.TestCase):
         self.assertEqual(200, status)
         self.assertEqual("29.0.0.0", default["release"])
         status, explicit = self.get_json("/api/versionone/stories?release=30.1.2.3")
+        self.assertEqual(200, status)
         self.assertEqual("30.1.2.3", explicit["release"])
         self.assertEqual(["29.0.0.0", "30.1.2.3"], self.calls)
+        self.assertEqual(0, explicit["recordCount"])
+
+    def test_repeated_release_requests_do_not_leak_state(self):
+        for release in ("28.1.0.0", "30.0.2.1"):
+            status, payload = self.get_json(f"/api/versionone/stories?release={release}")
+            self.assertEqual(200, status)
+            self.assertEqual(release, payload["release"])
+            self.assertEqual([], payload["stories"])
+        self.assertEqual(["28.1.0.0", "30.0.2.1"], self.calls)
 
     def test_invalid_release_is_400_without_retrieval(self):
         with self.assertRaises(HTTPError) as error:
