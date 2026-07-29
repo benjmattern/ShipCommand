@@ -46,6 +46,12 @@
 - Schedule drafts remain isolated until Save, while Cancel and closing discard changes.
 - Structural validation blocks malformed dates and invalid start/end ordering; partial and explicitly empty schedules remain valid.
 - Planning changes never alter execution progress, and permanent schedule persistence remains deferred.
+- Controlled phase definitions include an explicit `percentage` or `boolean` progress mode.
+- CAT Ready is the only current Boolean phase and retains numeric storage for backward compatibility.
+- CAT Ready uses 0 for Not ready and 100 for Ready; legacy values below 100 display as Not ready.
+- Explicit CAT Ready edits normalize to exactly 0 or 100.
+- Existing aggregate calculations remain numeric and unchanged, and planning schedules remain separate from phase execution.
+- Additional metric modes are deferred until a concrete use case requires them.
 
 ## Current UI
 

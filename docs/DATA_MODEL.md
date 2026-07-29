@@ -30,6 +30,10 @@ note?
 
 Complete is 100%; Not Started is 0%; Blocked may retain partial progress; Not Applicable is excluded from rollups. Progress exists only for applicable phases.
 
+Controlled phase definitions include a `progressMode` of `percentage` or `boolean` alongside the stable ID, label, and order. CAT Ready is the only current Boolean phase; the other six remain percentage-based.
+
+For backward compatibility, CAT Ready retains numeric storage: `0` means Not ready and `100` means Ready. Legacy values below 100 display as Not ready and remain loadable; explicitly editing CAT Ready normalizes the stored value to exactly 0 or 100. Existing numeric rollups are unchanged. Schedule planning reuses the same controlled phase IDs and ordering but remains separate from execution progress.
+
 ## Release schedule
 
 Release Planning Slice 1 introduces a separate normalized planning model:

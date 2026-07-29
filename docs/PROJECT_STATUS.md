@@ -24,8 +24,11 @@ ShipCommand is the foundation of a Release Operations Platform and unified relea
 - Release Planning Slice 1: normalized Release and phase schedule types, seed data, lookup/normalization helpers, and structural validation
 - Release Planning Slice 2: read-only overall and ordered phase schedule display in Release Detail, including partial and empty states
 - Release Planning Slice 3: session-only schedule create, edit, save, cancel, clear, and structural validation UI
+- Phase Progress Modes: CAT Ready Boolean display and editing with numeric 0/100 compatibility and unchanged aggregate calculations
 
 Seeded Releases show non-authoritative sample planning dates separately from the RAID workbook. Schedule CRUD is available for the current session; refresh restores seed values. Permanent persistence and planning-warning rules remain open.
+
+CAT Ready readiness is currently user-entered. Derived readiness, deployment verification, and external synchronization remain future work.
 
 ## Current operating constraints
 

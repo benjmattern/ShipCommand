@@ -1,4 +1,4 @@
-import { deliveryPhases, normalizePhaseIds } from './phases';
+import { deliveryPhases, isBooleanPhase, normalizePhaseIds } from './phases';
 import { normalizeProgressStatusId } from './progressStatuses';
 import type { DataRecord, PhaseProgress, ServiceAssignment } from './types';
 
@@ -9,6 +9,26 @@ export interface ProgressRollup {
 
 function clampPercent(value: number) {
   return Math.max(0, Math.min(100, Math.round(Number.isFinite(value) ? value : 0)));
+}
+
+export function isPhaseReady(value: number) {
+  return Number.isFinite(value) && value >= 100;
+}
+
+export function booleanToPhaseProgress(isReady: boolean) {
+  return isReady ? 100 : 0;
+}
+
+export function normalizePhaseProgressValue(phaseId: string, value: number) {
+  return isBooleanPhase(phaseId)
+    ? booleanToPhaseProgress(isPhaseReady(value))
+    : clampPercent(value);
+}
+
+export function formatPhaseProgressValue(phaseId: string, value: number) {
+  return isBooleanPhase(phaseId)
+    ? isPhaseReady(value) ? 'Ready' : 'Not ready'
+    : `${value}%`;
 }
 
 export function createDefaultPhaseProgress(phaseId: string): PhaseProgress {
@@ -41,16 +61,28 @@ export function reconcilePhaseProgress(applicablePhaseIds: string[], existing: P
 }
 
 export function updatePhaseProgressStatus(progress: PhaseProgress, statusId: string) {
-  return normalizePhaseProgress({ ...progress, statusId: normalizeProgressStatusId(statusId) });
+  const normalizedStatusId = normalizeProgressStatusId(statusId);
+  const updated = normalizePhaseProgress({ ...progress, statusId: normalizedStatusId });
+  return isBooleanPhase(progress.phaseId)
+    ? { ...updated, percentComplete: booleanToPhaseProgress(normalizedStatusId === 'complete') }
+    : updated;
 }
 
 export function updatePhaseProgressPercent(progress: PhaseProgress, value: number) {
-  const percentComplete = clampPercent(value);
+  const percentComplete = normalizePhaseProgressValue(progress.phaseId, value);
   let statusId = progress.statusId;
   if (percentComplete === 100) statusId = 'complete';
   else if (percentComplete === 0 && statusId !== 'blocked' && statusId !== 'not-applicable') statusId = 'not-started';
   else if (percentComplete > 0 && statusId !== 'blocked') statusId = 'in-progress';
   return normalizePhaseProgress({ ...progress, statusId, percentComplete });
+}
+
+export function updateBooleanPhaseProgress(progress: PhaseProgress, isReady: boolean) {
+  return normalizePhaseProgress({
+    ...progress,
+    statusId: isReady ? 'complete' : 'not-started',
+    percentComplete: booleanToPhaseProgress(isReady),
+  });
 }
 
 export function getOrderedPhaseProgress(assignment: ServiceAssignment) {

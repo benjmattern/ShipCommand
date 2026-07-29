@@ -14,10 +14,13 @@
 - Release Detail includes a read-only Schedule section with the overall Release window and all seven phase date ranges.
 - Complete, partial, and unscheduled Release schedules have explicit display states.
 - Release managers can create, edit, clear, save, or cancel overall and phase planning dates for the current session.
+- CAT Ready execution is presented and edited as Ready or Not ready; other controlled phases retain percentage progress.
 
 ## Rollup behavior
 
 Not Applicable entries are excluded. Blocked takes precedence, Complete requires all counted entries to be complete, In Progress reflects started work, and empty counted work returns N/A. Release progress excludes RAID items without countable progress.
+
+CAT Ready contributes its backward-compatible numeric value to the same rollups: Not ready contributes 0 and Ready contributes 100. No deployment-derived or externally synchronized readiness exists yet.
 
 ## Controlled phases
 

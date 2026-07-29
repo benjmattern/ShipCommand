@@ -7,11 +7,12 @@ This is a directional backlog, not a delivery commitment. Prefer validated verti
 1. **Complete:** Release Planning Slice 1 schedule data-model foundation.
 2. **Complete:** Read-only Release Schedule display, including the overall Release window, ordered phase dates, and partial and empty states.
 3. **Complete:** Session-only Release Schedule creation, overall and phase editing, isolated draft cancellation, structural validation messages, clear behavior, and normalized in-memory state.
-4. Add Release/phase boundary warnings and phase-overlap warnings.
-5. Add actual dates and schedule variance.
-6. Add a read-only User Story slice from an approved VersionOne export or fixture.
-7. Relate normalized User Stories to Release and RAID scope.
-8. Add one read-only testing slice from ALM data.
+4. **Complete:** Phase progress-mode metadata, Boolean CAT Ready display and editing, numeric compatibility helpers, and rollup compatibility review.
+5. Add Release/phase boundary warnings and phase-overlap warnings.
+6. Add actual dates and schedule variance.
+7. Add a read-only User Story slice from an approved VersionOne export or fixture.
+8. Relate normalized User Stories to Release and RAID scope.
+9. Add one read-only testing slice from ALM data.
 
 ## Platform foundations to validate
 
@@ -40,6 +41,9 @@ This is a directional backlog, not a delivery commitment. Prefer validated verti
 - Release-boundary, overlap, and chronological warnings
 - Actual schedule dates and variance
 - Cross-release planning
+- Derived CAT readiness and story-level or SIT deployment verification
+- Count-based progress and external phase synchronization
+- Three-state readiness if a validated use case requires it
 - Enterprise-system write-back
 - Full release-by-service-by-phase matrix
 - Progress history and audit events before persistence

@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { formatRaidId } from './raid';
 import { deliveryPhases } from './phases';
+import { formatPhaseProgressValue } from './phaseProgress';
 import {
   calculateRaidPhaseRollup,
   getPhaseRollupStatusLabel,
@@ -99,10 +100,10 @@ export function ReleaseTracker({ records, loadState, onOpenRecord }: ReleaseTrac
                   key={rollup.phaseId}
                   onClick={() => setSelectedPhaseId(rollup.phaseId)}
                   aria-pressed={selectedPhaseId === rollup.phaseId}
-                  aria-label={`${phase?.name}: ${label}, ${rollup.averagePercent === null ? 'no applicable work' : `${rollup.averagePercent} percent`}`}
+                  aria-label={`${phase?.name}: ${label}, ${rollup.averagePercent === null ? 'no applicable work' : formatPhaseProgressValue(rollup.phaseId, rollup.averagePercent)}`}
                 >
                   <strong>{phase?.name}</strong>
-                  <span className="phase-rollup-result">{label}{rollup.averagePercent === null ? '' : ` · ${rollup.averagePercent}%`}</span>
+                  <span className="phase-rollup-result">{label}{rollup.averagePercent === null ? '' : ` · ${formatPhaseProgressValue(rollup.phaseId, rollup.averagePercent)}`}</span>
                   {rollup.applicableProgressCount ? (
                     <small>
                       {rollup.applicableProgressCount} applicable
@@ -167,7 +168,7 @@ export function ReleaseTracker({ records, loadState, onOpenRecord }: ReleaseTrac
                     </td>
                     <td className="progress-cell">
                       {phaseRollup
-                        ? <><span>{getPhaseRollupStatusLabel(phaseRollup.statusId)}</span>{phaseRollup.averagePercent === null ? 'N/A' : `${phaseRollup.averagePercent}%`}<small>{phaseRollup.applicableProgressCount} services{phaseRollup.blockedCount ? ` · ${phaseRollup.blockedCount} blocked` : ''}</small></>
+                        ? <><span>{getPhaseRollupStatusLabel(phaseRollup.statusId)}</span>{phaseRollup.averagePercent === null ? 'N/A' : formatPhaseProgressValue(phaseRollup.phaseId, phaseRollup.averagePercent)}<small>{phaseRollup.applicableProgressCount} services{phaseRollup.blockedCount ? ` · ${phaseRollup.blockedCount} blocked` : ''}</small></>
                         : feature.progressPercent === null ? 'N/A' : `${feature.progressPercent}%`}
                     </td>
                     <td className="row-arrow">›</td>

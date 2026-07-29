@@ -2,7 +2,14 @@ import { useState } from 'react';
 import { applyDefaultPhases, involvementTypes } from './involvementTypes';
 import { microservices } from './microservices';
 import { deliveryPhases, normalizePhaseIds } from './phases';
-import { getOrderedPhaseProgress, reconcilePhaseProgress, updatePhaseProgressPercent, updatePhaseProgressStatus } from './phaseProgress';
+import {
+  getOrderedPhaseProgress,
+  isPhaseReady,
+  reconcilePhaseProgress,
+  updateBooleanPhaseProgress,
+  updatePhaseProgressPercent,
+  updatePhaseProgressStatus,
+} from './phaseProgress';
 import { progressStatuses } from './progressStatuses';
 import { createDefaultServiceAssignment, normalizeServiceAssignments } from './serviceAssignments';
 import type { ServiceAssignment } from './types';
@@ -152,20 +159,36 @@ export function ServiceAssignmentEditor({ initialAssignments, unknownLabels }: S
                               >
                                 {progressStatuses.filter((status) => status.active).map((status) => <option key={status.id} value={status.id}>{status.name}</option>)}
                               </select>
-                              <label>
-                                <span>Percent</span>
-                                <input
-                                  type="number"
-                                  min="0"
-                                  max="100"
-                                  value={progress.percentComplete}
-                                  onChange={(event) => updateProgress(
-                                    assignment.microserviceId,
-                                    progress.phaseId,
-                                    (current) => updatePhaseProgressPercent(current, Number(event.target.value)),
-                                  )}
-                                />
-                              </label>
+                              {phase?.progressMode === 'boolean' ? (
+                                <label className="readiness-control">
+                                  <input
+                                    type="checkbox"
+                                    checked={isPhaseReady(progress.percentComplete)}
+                                    aria-label={`${phase?.name ?? progress.phaseId} ready`}
+                                    onChange={(event) => updateProgress(
+                                      assignment.microserviceId,
+                                      progress.phaseId,
+                                      (current) => updateBooleanPhaseProgress(current, event.target.checked),
+                                    )}
+                                  />
+                                  <span>Ready</span>
+                                </label>
+                              ) : (
+                                <label>
+                                  <span>Percent</span>
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    max="100"
+                                    value={progress.percentComplete}
+                                    onChange={(event) => updateProgress(
+                                      assignment.microserviceId,
+                                      progress.phaseId,
+                                      (current) => updatePhaseProgressPercent(current, Number(event.target.value)),
+                                    )}
+                                  />
+                                </label>
+                              )}
                               <label className="progress-note">
                                 <span>Note</span>
                                 <input

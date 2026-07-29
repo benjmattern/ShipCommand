@@ -4,7 +4,7 @@ import { formatRaidId } from './raid';
 import { ReleaseTracker } from './ReleaseTracker';
 import { getInvolvementTypeName } from './involvementTypes';
 import { getMicroserviceName, microservices } from './microservices';
-import { calculateRaidProgress, getOrderedPhaseProgress } from './phaseProgress';
+import { calculateRaidProgress, formatPhaseProgressValue, getOrderedPhaseProgress } from './phaseProgress';
 import { getPhaseNames } from './phases';
 import { getProgressStatusName } from './progressStatuses';
 import { ServiceAssignmentEditor } from './ServiceAssignmentEditor';
@@ -278,7 +278,7 @@ function App() {
                               {getOrderedPhaseProgress(assignment).map((progress) => (
                                 <div key={progress.phaseId}>
                                   <span>{getPhaseNames([progress.phaseId])[0]}</span>
-                                  <strong>{getProgressStatusName(progress.statusId)}, {progress.percentComplete}%</strong>
+                                  <strong>{getProgressStatusName(progress.statusId)}, {formatPhaseProgressValue(progress.phaseId, progress.percentComplete)}</strong>
                                   {progress.note && <p>{progress.note}</p>}
                                 </div>
                               ))}
