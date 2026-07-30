@@ -15,11 +15,14 @@ This is a directional backlog, not a delivery commitment. Prefer validated verti
 9. **Complete:** Retrieve VersionOne Defects alongside Stories, classify B-/D-/Other records server-side, and add Type counts, badges, search, and filtering.
 10. **Complete:** Query arbitrary validated VersionOne releases, switch the Story Explorer explicitly between releases, preserve Story/Defect retrieval, and provide release-specific loading, refresh, empty, and error behavior.
 11. **Complete:** Release Workspace Foundation, reusable Workspace Panel, sticky Release header, and existing Planning and Phase Progress composition.
-12. Validate full R29 and an additional release: Story and Defect statuses, teams, owners, missing fields, duplicates, asset conventions, and anomalies.
-13. Determine Story/Defect-to-RAID and Story-to-Feature relationship rules and a governed stable identifier.
-14. Add Release/phase boundary warnings and phase-overlap warnings.
-15. Add actual dates and schedule variance.
-16. Add one read-only testing slice from ALM data.
+12. **Complete:** ServiceNow Connectivity Spike with local configuration, controlled authentication test, sanitized classification, and Diagnostics card.
+13. **Complete:** Release Identity v1 with normalized Release model, selected-Release store, Release-backed workspace fields, and local TSLC Project metadata editing.
+14. Validate ServiceNow connectivity and authentication behavior on the USPS work computer.
+15. Validate full R29 and an additional release: Story and Defect statuses, teams, owners, missing fields, duplicates, asset conventions, and anomalies.
+16. Determine Story/Defect-to-RAID and Story-to-Feature relationship rules and a governed stable identifier.
+17. Add Release/phase boundary warnings and phase-overlap warnings.
+18. Add actual dates and schedule variance.
+19. Add one read-only testing slice from ALM data.
 
 ## Platform foundations to validate
 
@@ -33,6 +36,7 @@ This is a directional backlog, not a delivery commitment. Prefer validated verti
 - Define automatic synchronization, sync timestamps, and sync error history
 - Select a RAID governance field and implement deterministic Story/Defect-to-RAID matching
 - Add ServiceNow integration and attach TSLC/CR/approval summaries to the Release Workspace
+- If direct ServiceNow REST is unavailable, design an approved report-export ingestion path with explicit provenance and validation
 - Add ALM integration and attach test-run/pass-rate summaries to the Release Workspace
 - Add Release synchronization and Release-level RAID linkage
 - Add an Executive Dashboard after Release Workspace data is authoritative

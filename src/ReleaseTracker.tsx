@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react';
 import { ReleaseWorkspace } from './releases/ReleaseWorkspace';
+import { createReleaseId } from './releases/Release';
+import type { ReleaseStore } from './releases/releaseTypes';
 import { selectReleaseSummaries } from './releaseSelectors';
 import { releaseScheduleSeed } from './releaseScheduleSeed';
 import {
@@ -11,6 +13,7 @@ import type { DataRecord } from './types';
 
 interface ReleaseTrackerProps {
   records: DataRecord[];
+  releaseStore: ReleaseStore;
   loadState: 'loading' | 'ready' | 'error';
   onOpenRecord: (record: DataRecord) => void;
   onOpenVersionOne: () => void;
@@ -19,12 +22,12 @@ interface ReleaseTrackerProps {
 
 export function ReleaseTracker({
   records,
+  releaseStore,
   loadState,
   onOpenRecord,
   onOpenVersionOne,
   onOpenRaid,
 }: ReleaseTrackerProps) {
-  const [selectedRelease, setSelectedRelease] = useState<string | null>(null);
   const [releaseSchedules, setReleaseSchedules] = useState(
     () => createInitialScheduleState(releaseScheduleSeed),
   );
@@ -34,18 +37,20 @@ export function ReleaseTracker({
   const summaries = useMemo(() => selectReleaseSummaries(records), [records]);
   const unassignedCount = records.filter((record) => !record.release?.trim()).length;
 
-  if (selectedRelease) {
+  if (releaseStore.selectedRelease) {
+    const selectedRelease = releaseStore.selectedRelease;
     return (
       <ReleaseWorkspace
-        key={selectedRelease}
-        releaseId={selectedRelease}
+        key={selectedRelease.id}
+        release={selectedRelease}
         records={records}
-        schedule={getReleaseSchedule(releaseSchedules, selectedRelease)}
-        isSeedSchedule={unchangedSeedReleaseKeys.has(selectedRelease.trim().toLowerCase())}
-        onBack={() => setSelectedRelease(null)}
+        schedule={getReleaseSchedule(releaseSchedules, selectedRelease.name)}
+        isSeedSchedule={unchangedSeedReleaseKeys.has(selectedRelease.name.toLowerCase())}
+        onBack={() => releaseStore.selectRelease(null)}
+        onUpdateRelease={(update) => releaseStore.updateRelease(selectedRelease.id, update)}
         onOpenRecord={onOpenRecord}
         onOpenVersionOne={onOpenVersionOne}
-        onOpenRaid={() => onOpenRaid(selectedRelease)}
+        onOpenRaid={() => onOpenRaid(selectedRelease.name)}
         onSaveSchedule={(updatedSchedule) => {
           setReleaseSchedules((current) => upsertReleaseSchedule(current, updatedSchedule));
           setUnchangedSeedReleaseKeys((current) => {
@@ -75,7 +80,7 @@ export function ReleaseTracker({
           </div>
           <div className="release-list">
             {summaries.map((release) => (
-              <button className="release-row" type="button" key={release.name} onClick={() => setSelectedRelease(release.name)}>
+              <button className="release-row" type="button" key={release.name} onClick={() => releaseStore.selectRelease(createReleaseId(release.name))}>
                 <strong className="release-row-name">{release.name}</strong>
                 <span className="release-row-progress"><small>Progress</small>{release.progressPercent === null ? 'N/A' : `${release.progressPercent}%`}</span>
                 <span className="release-row-metric"><small>Features</small><b>{release.featureCount}</b></span>

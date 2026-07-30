@@ -13,32 +13,37 @@ import { ReleaseScheduleSection } from '../ReleaseScheduleSection';
 import type { ReleaseSchedule } from '../releaseScheduleTypes';
 import type { DataRecord } from '../types';
 import { ReleaseOverview } from './components/ReleaseOverview';
+import { ServiceNowReleaseIdentity } from './components/ServiceNowReleaseIdentity';
 import { WorkspaceHeader } from './components/WorkspaceHeader';
 import { WorkspacePanel } from './components/WorkspacePanel';
+import type { Release, ReleaseMetadataUpdate } from './releaseTypes';
 
 interface ReleaseWorkspaceProps {
-  releaseId: string;
+  release: Release;
   records: DataRecord[];
   schedule?: ReleaseSchedule;
   isSeedSchedule: boolean;
   onSaveSchedule: (schedule: ReleaseSchedule) => void;
   onBack: () => void;
+  onUpdateRelease: (update: ReleaseMetadataUpdate) => void;
   onOpenRecord: (record: DataRecord) => void;
   onOpenVersionOne: () => void;
   onOpenRaid: () => void;
 }
 
 export function ReleaseWorkspace({
-  releaseId,
+  release,
   records,
   schedule,
   isSeedSchedule,
   onSaveSchedule,
   onBack,
+  onUpdateRelease,
   onOpenRecord,
   onOpenVersionOne,
   onOpenRaid,
 }: ReleaseWorkspaceProps) {
+  const releaseId = release.name;
   const [selectedPhaseId, setSelectedPhaseId] = useState<string | null>(null);
   const features = useMemo(
     () => selectReleaseFeatures(records).filter((feature) => feature.release === releaseId),
@@ -68,8 +73,7 @@ export function ReleaseWorkspace({
   return (
     <section className="release-workspace">
       <WorkspaceHeader
-        releaseId={releaseId}
-        raidCount={features.length}
+        release={release}
         progressPercent={progressPercent}
         onBack={onBack}
       />
@@ -78,16 +82,16 @@ export function ReleaseWorkspace({
         <WorkspacePanel
           title="Overview"
           health="healthy"
-          summary={`${features.length} RAID ${features.length === 1 ? 'feature' : 'features'}`}
+          summary={`${release.raidCount} RAID ${release.raidCount === 1 ? 'feature' : 'features'}`}
           defaultExpanded
         >
-          <ReleaseOverview featureCount={features.length} progressPercent={progressPercent} />
+          <ReleaseOverview release={release} progressPercent={progressPercent} />
         </WorkspacePanel>
 
         <WorkspacePanel
           title="VersionOne"
           health="healthy"
-          summary="Stories — · Defects —"
+          summary={`Stories ${release.storyCount ?? '—'} · Defects ${release.defectCount ?? '—'}`}
           actions={(
             <>
               <button className="secondary-button" type="button" disabled title="Load a release in the Story Explorer first">Refresh</button>
@@ -96,28 +100,35 @@ export function ReleaseWorkspace({
           )}
         >
           <dl className="workspace-integration-summary">
-            <div><dt>Release Scope</dt><dd>Open Explorer to select</dd></div>
-            <div><dt>Story Count</dt><dd>—</dd></div>
-            <div><dt>Defect Count</dt><dd>—</dd></div>
-            <div><dt>Last Refresh</dt><dd>Not recorded</dd></div>
+            <div><dt>VersionOne Release</dt><dd>{release.versionOneRelease ?? 'Not mapped'}</dd></div>
+            <div><dt>Story Count</dt><dd>{release.storyCount ?? '—'}</dd></div>
+            <div><dt>Defect Count</dt><dd>{release.defectCount ?? '—'}</dd></div>
+            <div><dt>Last Refresh</dt><dd>{release.lastRefresh ?? 'Not recorded'}</dd></div>
           </dl>
           <p className="workspace-note">VersionOne data remains session-only in the Story Explorer and is not duplicated in the workspace.</p>
         </WorkspacePanel>
 
-        <WorkspacePanel title="ServiceNow" health="not-configured" summary="Integration not configured">
-          <p className="workspace-placeholder">ServiceNow integration not configured.</p>
-          <p className="workspace-note">Future capabilities: TSLC Project, PROD CR, TEM CR, RTM, SIA, SIT TSLC, CAT TSLC, and Approval Status.</p>
+        <WorkspacePanel
+          title="ServiceNow"
+          health={release.tslcProjectId ? 'pending' : 'not-configured'}
+          summary={release.tslcProjectId ?? 'TSLC Project not configured'}
+        >
+          <ServiceNowReleaseIdentity
+            release={release}
+            onSave={(tslcProjectId) => onUpdateRelease({ tslcProjectId })}
+          />
+          <p className="workspace-note">This stores Release identity only. No ServiceNow request is made.</p>
         </WorkspacePanel>
 
         <WorkspacePanel title="ALM" health="not-configured" summary="Integration not configured">
-          <p className="workspace-placeholder">ALM integration not configured.</p>
+          <p className="workspace-placeholder">ALM Release: {release.almReleaseId ?? 'Not configured'}</p>
           <p className="workspace-note">Future capabilities: Regression, CAT, Test Runs, and Pass Rate.</p>
         </WorkspacePanel>
 
         <WorkspacePanel
           title="RAID"
           health="not-configured"
-          summary={`${features.length} assigned`}
+          summary={`${release.raidCount} assigned`}
           actions={<button className="secondary-button" type="button" onClick={onOpenRaid}>Open Register</button>}
         >
           <p className="workspace-placeholder">Release-level RAID linkage is not configured.</p>

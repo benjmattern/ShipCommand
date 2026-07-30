@@ -2,10 +2,12 @@
 
 This document maps the implemented browser POC. For the broader platform blueprint, see [System Architecture](SYSTEM_ARCHITECTURE.md).
 
-- `App.tsx` owns the single in-memory RAID item array and all CRUD and priority mutations.
+- `App.tsx` owns the single in-memory RAID item array, all CRUD and priority mutations, and the session-level ReleaseStore so Release metadata survives navigation between views.
 - `connectors.ts` parses `BacklogData.xlsx` into the shared `DataRecord` model.
 - `releaseSelectors.ts` provides pure derived release-feature and release-summary views.
 - `ReleaseTracker.tsx` renders the release overview and owns session-only schedule state; `releases/ReleaseWorkspace.tsx` composes the selected Release through reusable workspace panels.
+- `releases/Release.ts` defines Release normalization, identity, record-derived initialization, metadata updates, and TSLC identifier validation.
+- `releases/ReleaseStore.ts` owns selected Release identity and session-only optional Release metadata through a small native React hook.
 - `raid.ts` centralizes RAID ID display formatting.
 - `microservices.ts` owns controlled microservice reference data, workbook normalization, and ID-to-name resolution.
 - `phases.ts` and `involvementTypes.ts` own controlled delivery reference data.
@@ -19,6 +21,8 @@ No duplicate release-feature state is stored. Release tracker output is recalcul
 `serviceAssignments` are the RAID item source of truth. Each assignment contains a stable microservice ID, involvement type ID, and ordered applicable phase IDs. Workbook service strings are normalized during import with case-insensitive exact names and an explicit alias table. Controlled services default to Full Delivery; explicit test-only workbook labels default to Testing Support. Unrecognized labels are preserved separately and surfaced rather than guessed or discarded.
 
 Release views derive assignment summaries from RAID state; no separate `ReleaseFeature` persistence exists.
+
+Release identity is first-class even while existing records and schedules retain their compatible string keys. `ReleaseStore` derives normalized Releases from the current RAID collection, reconciles RAID counts, and layers optional in-memory integration metadata over those identities. Integrations enrich a Release over time rather than maintaining competing release identities. No Release metadata is persisted.
 
 `phaseProgress` remains nested within each service assignment. The smallest progress unit is RAID item + microservice + applicable phase. Reconciliation preserves overlapping phases, creates missing defaults, and removes non-applicable or duplicate entries.
 

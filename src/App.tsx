@@ -12,6 +12,7 @@ import { normalizeServiceAssignments } from './serviceAssignments';
 import type { DataRecord, ServiceAssignment } from './types';
 import { DiagnosticsPage } from './diagnostics/DiagnosticsPage';
 import { VersionOneStoriesPage } from './versionone/VersionOneStoriesPage';
+import { useReleaseStore } from './releases/ReleaseStore';
 
 type ModalState =
   | { mode: 'view'; record: DataRecord }
@@ -39,6 +40,7 @@ function App() {
   const [modal, setModal] = useState<ModalState>(null);
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [loadState, setLoadState] = useState<'loading' | 'ready' | 'error'>('loading');
+  const releaseStore = useReleaseStore(records);
 
   const filteredRecords = useMemo(
     () => selectedRelease === 'all' ? records : records.filter((record) => record.release === selectedRelease),
@@ -248,6 +250,7 @@ function App() {
         </> : activeView === 'releases' ? (
           <ReleaseTracker
             records={records}
+            releaseStore={releaseStore}
             loadState={loadState}
             onOpenRecord={(record) => setModal({ mode: 'view', record })}
             onOpenVersionOne={() => setActiveView('versionone')}

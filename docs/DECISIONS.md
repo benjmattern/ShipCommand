@@ -77,6 +77,16 @@
 - The workspace composes established Planning and Phase Progress components and selectors instead of duplicating their behavior or state.
 - Enterprise panels attach to a Release progressively; unavailable data remains an explicit placeholder and is never inferred.
 - Panel expansion is local and non-persistent. A router, state library, and preference storage remain unjustified for this foundation.
+- ServiceNow feasibility uses the established React → Local Integration API → controlled PowerShell boundary rather than direct browser access.
+- ServiceNow URLs are local environment configuration and are never committed, returned to React, or accepted from browser parameters.
+- The initial ServiceNow test uses Windows default credentials only to classify connectivity and authentication behavior; OAuth, interactive-login automation, and credential storage are not implemented.
+- The ServiceNow diagnostic returns metadata classifications only. Raw JSON, XML, HTML, headers, cookies, redirect targets, and command details are excluded.
+- TSLC integration remains deferred until the work-computer spike establishes the approved access path. A controlled report-ingestion workflow remains a fallback if direct REST access is unavailable.
+- Release is a first-class normalized domain model and is the common identity consumed by Workspace, Planning, Phase Progress, RAID, and future integrations.
+- `ReleaseStore` owns selected Release and optional Release metadata using local native React state; persistence, localStorage, backend APIs, and a new context architecture remain deferred.
+- Existing RAID records and schedules retain Release-name compatibility keys while consumers progressively adopt the shared Release object.
+- Integration-specific identifiers and counts enrich Release fields incrementally. Missing values remain undefined and are displayed as placeholders rather than fabricated.
+- TSLC Project identity can be edited and validated locally, but this operation performs no ServiceNow lookup, diagnostic, synchronization, or persistence.
 
 ## Current UI
 

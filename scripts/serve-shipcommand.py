@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import json
 import mimetypes
+import os
 import shutil
 import subprocess
 import sys
@@ -28,8 +29,10 @@ from versionone_stories import (
 REPOSITORY_ROOT = Path(__file__).resolve().parent.parent
 DEMO_DIRECTORY = REPOSITORY_ROOT / "demo"
 VERSIONONE_HELPER = Path(__file__).resolve().parent / "test-versionone-connection.ps1"
+SERVICENOW_HELPER = Path(__file__).resolve().parent / "test-servicenow-connection.ps1"
 LOCAL_API_PATH = "/api/versionone/test"
 STORIES_API_PATH = "/api/versionone/stories"
+SERVICENOW_API_PATH = "/api/servicenow/test"
 SUBPROCESS_TIMEOUT_SECONDS = 35
 
 
@@ -239,10 +242,199 @@ def run_versionone_stories(release: str) -> dict[str, Any]:
     )
 
 
+def servicenow_result(
+    *,
+    ok: bool,
+    configured: bool,
+    duration_ms: int,
+    upstream_status: int | None,
+    content_type: str | None,
+    response_kind: str,
+    authentication_outcome: str,
+    redirect_detected: bool,
+    login_page_detected: bool,
+    servicenow_detected: bool,
+    message: str,
+) -> dict[str, Any]:
+    return {
+        "ok": ok,
+        "configured": configured,
+        "system": "servicenow",
+        "durationMs": duration_ms,
+        "upstreamStatus": upstream_status,
+        "contentType": content_type,
+        "responseKind": response_kind,
+        "authenticationOutcome": authentication_outcome,
+        "redirectDetected": redirect_detected,
+        "loginPageDetected": login_page_detected,
+        "serviceNowDetected": servicenow_detected,
+        "message": message,
+    }
+
+
+def get_servicenow_request_url(environ: dict[str, str] | os._Environ[str] = os.environ) -> str | None:
+    base_url = environ.get("SHIPCOMMAND_SERVICENOW_BASE_URL", "").strip()
+    test_path = environ.get("SHIPCOMMAND_SERVICENOW_TEST_PATH", "").strip()
+    if not base_url or not test_path:
+        return None
+    if len(base_url) > 2048 or len(test_path) > 2048 or any(ord(character) < 32 for character in base_url + test_path):
+        raise ValueError("Invalid ServiceNow configuration.")
+    parsed_base = urlsplit(base_url)
+    parsed_path = urlsplit(test_path)
+    if (
+        parsed_base.scheme.lower() != "https"
+        or not parsed_base.netloc
+        or parsed_base.username
+        or parsed_base.password
+        or parsed_base.query
+        or parsed_base.fragment
+        or not test_path.startswith("/")
+        or parsed_path.scheme
+        or parsed_path.netloc
+        or parsed_path.fragment
+    ):
+        raise ValueError("Invalid ServiceNow configuration.")
+    return f"{base_url.rstrip('/')}{test_path}"
+
+
+def classify_servicenow_result(payload: dict[str, Any], fallback_duration_ms: int) -> dict[str, Any]:
+    upstream_status = payload.get("upstreamStatus")
+    if not isinstance(upstream_status, int):
+        upstream_status = None
+    content_type = payload.get("contentType") if isinstance(payload.get("contentType"), str) else None
+    response_kind = payload.get("responseKind")
+    if response_kind not in {"json", "xml", "html", "empty", "unknown"}:
+        response_kind = "unknown"
+    duration_ms = payload.get("durationMs")
+    if not isinstance(duration_ms, int):
+        duration_ms = fallback_duration_ms
+    redirect_detected = bool(payload.get("redirectDetected"))
+    login_page_detected = bool(payload.get("loginPageDetected"))
+    servicenow_detected = bool(payload.get("serviceNowDetected"))
+    error_category = payload.get("errorCategory")
+
+    if upstream_status == 401:
+        outcome, message = "unauthorized", "ServiceNow denied access."
+    elif upstream_status == 403:
+        outcome, message = "forbidden", "ServiceNow denied access."
+    elif redirect_detected:
+        outcome, message = "redirect", "ServiceNow redirected the request to an interactive sign-in flow."
+    elif login_page_detected:
+        outcome, message = "login-page", "ServiceNow returned a login page."
+    elif error_category == "transport":
+        outcome, message = "unreachable", "The local integration API could not reach ServiceNow."
+    elif error_category:
+        outcome, message = "upstream-error", "The local integration API could not complete the ServiceNow request."
+    elif upstream_status is not None and 200 <= upstream_status < 300 and (
+        response_kind in {"json", "xml"} or servicenow_detected
+    ):
+        outcome, message = "authenticated-response", "ServiceNow returned an authenticated response."
+    elif upstream_status is not None and upstream_status >= 400:
+        outcome, message = "upstream-error", "ServiceNow returned an upstream error."
+    else:
+        outcome, message = "unknown", "ServiceNow returned a response that could not be classified."
+
+    return servicenow_result(
+        ok=outcome == "authenticated-response",
+        configured=True,
+        duration_ms=duration_ms,
+        upstream_status=upstream_status,
+        content_type=content_type,
+        response_kind=response_kind,
+        authentication_outcome=outcome,
+        redirect_detected=redirect_detected,
+        login_page_detected=login_page_detected,
+        servicenow_detected=servicenow_detected,
+        message=message,
+    )
+
+
+def run_servicenow_diagnostic(
+    *,
+    environ: dict[str, str] | os._Environ[str] = os.environ,
+    powershell_executable: str | None = None,
+    run_process: Callable[..., subprocess.CompletedProcess[str]] = subprocess.run,
+) -> tuple[int, dict[str, Any]]:
+    try:
+        request_url = get_servicenow_request_url(environ)
+    except ValueError:
+        return 500, servicenow_result(
+            ok=False, configured=False, duration_ms=0, upstream_status=None, content_type=None,
+            response_kind="unknown", authentication_outcome="not-configured",
+            redirect_detected=False, login_page_detected=False, servicenow_detected=False,
+            message="ServiceNow configuration is invalid.",
+        )
+    if request_url is None:
+        return 200, servicenow_result(
+            ok=False, configured=False, duration_ms=0, upstream_status=None, content_type=None,
+            response_kind="empty", authentication_outcome="not-configured",
+            redirect_detected=False, login_page_detected=False, servicenow_detected=False,
+            message="ServiceNow is not configured.",
+        )
+
+    executable = powershell_executable or find_powershell()
+    if not executable:
+        return 500, servicenow_result(
+            ok=False, configured=True, duration_ms=0, upstream_status=None, content_type=None,
+            response_kind="unknown", authentication_outcome="unreachable",
+            redirect_detected=False, login_page_detected=False, servicenow_detected=False,
+            message="The local integration API could not start the ServiceNow connectivity test.",
+        )
+
+    started_at = time.monotonic()
+    command = [
+        executable, "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass",
+        "-File", str(SERVICENOW_HELPER), "-RequestUrl", request_url,
+    ]
+    try:
+        completed = run_process(
+            command, shell=False, capture_output=True, text=True, encoding="utf-8",
+            errors="replace", timeout=SUBPROCESS_TIMEOUT_SECONDS, check=False,
+        )
+    except subprocess.TimeoutExpired:
+        duration_ms = round((time.monotonic() - started_at) * 1000)
+        return 504, servicenow_result(
+            ok=False, configured=True, duration_ms=duration_ms, upstream_status=None, content_type=None,
+            response_kind="unknown", authentication_outcome="timeout",
+            redirect_detected=False, login_page_detected=False, servicenow_detected=False,
+            message="The ServiceNow request exceeded the local integration timeout.",
+        )
+    except OSError:
+        duration_ms = round((time.monotonic() - started_at) * 1000)
+        return 500, servicenow_result(
+            ok=False, configured=True, duration_ms=duration_ms, upstream_status=None, content_type=None,
+            response_kind="unknown", authentication_outcome="unreachable",
+            redirect_detected=False, login_page_detected=False, servicenow_detected=False,
+            message="The local integration API could not start the ServiceNow connectivity test.",
+        )
+
+    duration_ms = round((time.monotonic() - started_at) * 1000)
+    if completed.returncode != 0:
+        return 502, servicenow_result(
+            ok=False, configured=True, duration_ms=duration_ms, upstream_status=None, content_type=None,
+            response_kind="unknown", authentication_outcome="upstream-error",
+            redirect_detected=False, login_page_detected=False, servicenow_detected=False,
+            message="The local integration API could not complete the ServiceNow connectivity test.",
+        )
+    try:
+        payload = json.loads(completed.stdout.strip())
+        if not isinstance(payload, dict):
+            raise ValueError
+    except (json.JSONDecodeError, ValueError):
+        return 502, servicenow_result(
+            ok=False, configured=True, duration_ms=duration_ms, upstream_status=None, content_type=None,
+            response_kind="unknown", authentication_outcome="upstream-error",
+            redirect_detected=False, login_page_detected=False, servicenow_detected=False,
+            message="The local integration API received an invalid ServiceNow diagnostic result.",
+        )
+    return 200, classify_servicenow_result(payload, duration_ms)
+
+
 def create_request_handler(
     demo_directory: Path,
     diagnostic: Callable[[], tuple[int, dict[str, Any]]] = run_versionone_diagnostic,
     stories: Callable[[str], dict[str, Any]] = run_versionone_stories,
+    servicenow_diagnostic: Callable[[], tuple[int, dict[str, Any]]] = run_servicenow_diagnostic,
 ) -> type[BaseHTTPRequestHandler]:
     resolved_demo = demo_directory.resolve()
 
@@ -257,6 +449,9 @@ def create_request_handler(
                 return
             if request_path == STORIES_API_PATH:
                 self._serve_versionone_stories(parsed_request.query)
+                return
+            if request_path == SERVICENOW_API_PATH:
+                self._serve_servicenow_diagnostic(parsed_request.query)
                 return
             if request_path.startswith("/api/"):
                 self._send_json(404, {"status": "failed", "message": "Local API route not found."})
@@ -329,6 +524,28 @@ def create_request_handler(
                 )
             self._send_json(local_status, result)
 
+        def _serve_servicenow_diagnostic(self, query_string: str) -> None:
+            if query_string:
+                self._send_json(400, {
+                    "ok": False,
+                    "configured": False,
+                    "system": "servicenow",
+                    "message": "ServiceNow diagnostic parameters are not accepted.",
+                })
+                return
+            try:
+                local_status, result = servicenow_diagnostic()
+            except Exception as error:
+                print(f"ServiceNow diagnostic error: {type(error).__name__}", file=sys.stderr)
+                local_status = 500
+                result = servicenow_result(
+                    ok=False, configured=True, duration_ms=0, upstream_status=None, content_type=None,
+                    response_kind="unknown", authentication_outcome="upstream-error",
+                    redirect_detected=False, login_page_detected=False, servicenow_detected=False,
+                    message="The local integration API encountered an unexpected ServiceNow diagnostic failure.",
+                )
+            self._send_json(local_status, result)
+
         def _serve_static(self, request_path: str) -> None:
             decoded_path = unquote(request_path)
             relative_path = "index.html" if decoded_path == "/" else decoded_path.lstrip("/")
@@ -374,10 +591,13 @@ def create_server(
     demo_directory: Path = DEMO_DIRECTORY,
     diagnostic: Callable[[], tuple[int, dict[str, Any]]] = run_versionone_diagnostic,
     stories: Callable[[str], dict[str, Any]] = run_versionone_stories,
+    servicenow_diagnostic: Callable[[], tuple[int, dict[str, Any]]] = run_servicenow_diagnostic,
 ) -> ThreadingHTTPServer:
     if not (demo_directory / "index.html").is_file():
         raise FileNotFoundError(f"ShipCommand demo build was not found: {demo_directory}")
-    return ThreadingHTTPServer((host, port), create_request_handler(demo_directory, diagnostic, stories))
+    return ThreadingHTTPServer((
+        host, port
+    ), create_request_handler(demo_directory, diagnostic, stories, servicenow_diagnostic))
 
 
 def parse_arguments() -> argparse.Namespace:
@@ -405,6 +625,7 @@ def main() -> int:
     print("API:")
     print(f"GET {LOCAL_API_PATH}")
     print(f"GET {STORIES_API_PATH}")
+    print(f"GET {SERVICENOW_API_PATH}")
     print()
     print("Press Ctrl+C to stop.")
 

@@ -17,6 +17,7 @@ The React POC uses local component state and CSS. `App.tsx` owns the RAID array 
 
 - Mutable RAID state has one owner.
 - Mutable Release schedule state is owned by `ReleaseTracker` and initialized from normalized copies of immutable seed fixtures.
+- Normalized Release identity, selected Release, and optional local integration metadata are owned by the App-level `ReleaseStore`, allowing session metadata to survive navigation between views.
 - Release and progress UI is derived.
 - View, selected release, selected phase, modal, and drag state are local UI concerns.
 - No router or state library is justified by current scope.
@@ -27,6 +28,8 @@ The React POC uses local component state and CSS. `App.tsx` owns the RAID array 
 Diagnostics is a top-level POC navigation view designed to accept additional enterprise connection tests over time. The first card performs a read-only same-origin request to `/api/versionone/test` and displays status, timing, readable upstream HTTP metadata, response size, and format indicators. Its visible path is ShipCommand → Local Integration API → VersionOne.
 
 The local API returns structured sanitized JSON, including a `local-api` request-path marker. VersionOne XML is inspected only by the controlled server-side request and is never returned to React. Diagnostic state remains session-only; the UI does not request credentials or expose enterprise story content.
+
+The ServiceNow card is a separate, user-triggered connectivity spike using `/api/servicenow/test`. It displays local configuration state, duration, upstream status, content type, response kind, authentication outcome, redirect/login detection, and a sanitized message. It never displays or accepts enterprise URLs, response bodies, headers, cookies, credentials, tables, or queries. ServiceNow and VersionOne diagnostic state remain independent and session-only.
 
 ## VersionOne Story Explorer
 
@@ -41,6 +44,8 @@ Selecting a Release enters the Release Workspace. A compact sticky header retain
 `WorkspacePanel` is the shared accessible disclosure pattern. It accepts title, optional health, summary, actions, default expansion, and arbitrary body content. Overview, Release Planning, and Phase Progress start expanded. VersionOne, ServiceNow, ALM, and RAID start collapsed. Expansion is session-local component state and is not remembered.
 
 Release Planning embeds the existing schedule component and editor unchanged. Phase Progress retains the existing phase cards, attention summary, filters, Boolean/percentage formatting, CAT Ready behavior, and RAID-derived table. VersionOne remains a separate detailed explorer opened from its workspace panel; its state is not duplicated. ServiceNow, ALM, and Release-level RAID linkage are explicit placeholders.
+
+The Workspace header, Overview, VersionOne summary, RAID count, and ALM placeholder read from the selected `Release`. The ServiceNow panel provides a local TSLC Project identity editor with explicit validation and Save actions. Saving updates only `ReleaseStore`; it does not call Diagnostics, ServiceNow, or any local API, and refresh restores record-derived Release metadata.
 
 ## Accessibility and responsiveness
 

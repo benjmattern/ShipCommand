@@ -66,7 +66,27 @@ Optional RAID linkage
 
 Release is the application’s central domain object and the Release Workspace is its primary composition boundary. Existing schedule state and derived phase progress remain owned by their established modules; the workspace composes those capabilities through reusable panels rather than duplicating their state or calculations.
 
+`ReleaseStore` is the browser POC’s authoritative owner of normalized Release identity, selected Release, locally known RAID count, and optional integration metadata. Existing RAID and schedule models continue using Release names as compatibility keys. VersionOne, ServiceNow, and future ALM capabilities incrementally populate fields on the shared Release rather than creating independent Release objects. The store is native React session state with no context framework, localStorage, API, or persistence.
+
 Future enterprise integrations attach read-only summaries and drill-down actions to a Release panel. The current VersionOne panel links to the existing Story Explorer without changing its React → Python → PowerShell → VersionOne boundary. ServiceNow and ALM panels are placeholders only. No workspace persistence, synchronization process, or generic connector framework exists.
+
+## ServiceNow connectivity spike
+
+`GET /api/servicenow/test` applies the existing local integration boundary to a read-only ServiceNow feasibility test:
+
+```text
+React Diagnostics
+        ↓ same-origin JSON
+Python Local Integration API
+        ↓ fixed controlled subprocess
+PowerShell Invoke-WebRequest
+        ↓ local approved configuration
+ServiceNow
+```
+
+The ServiceNow base URL and test path exist only in `SHIPCOMMAND_SERVICENOW_BASE_URL` and `SHIPCOMMAND_SERVICENOW_TEST_PATH` on the local work computer. The browser supplies no parameters and cannot control the URL, path, query, table, headers, credentials, or command. PowerShell uses default Windows credentials for the spike and returns only response classification metadata. Bodies, headers, cookies, redirects, URLs, and credentials are excluded from the React contract.
+
+This endpoint determines whether direct REST, integrated authentication, interactive SSO, OAuth, network restrictions, or another approved mechanism applies. It does not retrieve TSLC data. If direct REST access is unavailable, a future read-only report-export ingestion boundary may replace live REST access; report format, transfer, parsing, and provenance remain undecided.
 
 ## Target logical architecture — vision
 

@@ -1,4 +1,5 @@
 import { VersionOneDiagnosticCard } from './VersionOneDiagnosticCard';
+import { ServiceNowDiagnosticCard } from './ServiceNowDiagnosticCard';
 
 export function DiagnosticsPage() {
   return (
@@ -8,6 +9,7 @@ export function DiagnosticsPage() {
         <p>Read-only tests report sanitized connection metadata and do not retain response content.</p>
       </div>
       <VersionOneDiagnosticCard />
+      <ServiceNowDiagnosticCard />
     </section>
   );
 }

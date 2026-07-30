@@ -30,6 +30,8 @@ ShipCommand is the foundation of a Release Operations Platform and unified relea
 - VersionOne Defect Story Support: combined Story/Defect retrieval, server-side type classification, counts, Type badges, and filtering
 - VersionOne Release Querying v1: user-entered validated release loading, distinct draft/requested/loaded state, loaded-release refresh, and release-specific empty/error behavior
 - Release Workspace Foundation v1: Release-centered workspace, sticky context header, reusable collapsible panels, and preserved Planning and Phase Progress experiences
+- ServiceNow Connectivity Spike v1: locally configured read-only diagnostic endpoint, controlled PowerShell request, sanitized authentication/response classification, and Diagnostics card
+- Release Identity v1: normalized first-class Release model, lightweight ReleaseStore, Release-backed workspace summaries, and session-only TSLC Project identity editing
 
 Seeded Releases show non-authoritative sample planning dates separately from the RAID workbook. Schedule CRUD is available for the current session; refresh restores seed values. Permanent persistence and planning-warning rules remain open.
 
@@ -38,6 +40,10 @@ CAT Ready readiness is currently user-entered. Derived readiness, deployment ver
 VersionOne connectivity through controlled PowerShell default credentials is proven on the USPS work computer. `/api/versionone/stories` and the Story Explorer accept arbitrary validated four-segment releases, with `29.0.0.0` remaining the initial default. Fixed upstream Story and Defect asset requests are merged into one collection. Live validation of at least one additional release and Defect XML conventions remains pending; release discovery, automatic synchronization, RAID matching, and Release Tracker integration remain deferred.
 
 Release is now the primary UI context. Selecting one from the Releases overview opens its Release Workspace. Overview, Release Planning, and Phase Progress are initially expanded; VersionOne, ServiceNow, ALM, and RAID are compact collapsed panels. ServiceNow, ALM, and Release-level RAID linkage remain placeholders rather than claimed integrations.
+
+ServiceNow connectivity architecture is implemented but not yet classified on the USPS work computer. Missing local configuration is handled safely. No TSLC table lookup, OAuth flow, synchronization, report parsing, or persistence exists. The live result will determine whether direct REST, Windows integrated authentication, another approved authentication mechanism, or report ingestion is appropriate.
+
+Release identity now comes from a shared model derived from locally known RAID assignments. ReleaseStore owns selection and optional metadata for the current browser session. Workspace placeholders read those fields directly. TSLC Project values may be validated and saved locally, but enterprise identifiers, Story/Defect counts, health, refresh timestamps, and ALM mappings remain undefined until authoritative integrations populate them.
 
 ## Current operating constraints
 
