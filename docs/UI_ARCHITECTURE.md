@@ -8,7 +8,7 @@ The React POC uses local component state and CSS. `App.tsx` owns the RAID array 
 
 - **RAID dashboard:** summary metrics, release filter, draggable priority grid, and item modal.
 - **Releases overview:** compact, accessible release rows with semantically sorted metrics.
-- **Release detail:** Schedule display and editor followed by phase summary, attention summary, phase filter, and derived feature table.
+- **Release Workspace:** sticky Release context plus reusable Overview, VersionOne, ServiceNow, ALM, RAID, Release Planning, and Phase Progress panels.
 - **RAID modal:** details plus service, involvement, phase applicability, and progress editing.
 - **Diagnostics:** Enterprise Connections contains a VersionOne Local Integration API connectivity card.
 - **VersionOne Stories and Defects:** explicit load/refresh, retrieval summary, number/title search, type/status/team filters, and one read-only delivery-record table.
@@ -33,6 +33,14 @@ The local API returns structured sanitized JSON, including a `local-api` request
 VersionOne is a top-level view with local page state and no automatic startup load. A labeled release input begins at `29.0.0.0`, validates four numeric segments client-side, and submits only explicit user-triggered loads. Draft input, the in-flight requested release, and the response-backed loaded release remain distinct: editing does not relabel current results, failure preserves prior results, and Refresh reloads the loaded release rather than an unrelated draft.
 
 Successful release changes reset search, Type, status, and team filters, then show release-specific retrieval metadata plus total, Story, Defect, and optional Other counts. The unified table includes a Type badge and Title column. Search covers B-/D- numbers and titles; Type, status, and team filters combine with search, while status and team options derive from the complete returned collection. Loading, sanitized release-specific error/retry, valid empty-release, and no-filter-match states are explicit.
+
+## Release Workspace
+
+Selecting a Release enters the Release Workspace. A compact sticky header retains the Release name, existing RAID-derived progress/counts, and explicit placeholders for data that is not yet available. It does not invent overall health, enterprise counts, or refresh timestamps.
+
+`WorkspacePanel` is the shared accessible disclosure pattern. It accepts title, optional health, summary, actions, default expansion, and arbitrary body content. Overview, Release Planning, and Phase Progress start expanded. VersionOne, ServiceNow, ALM, and RAID start collapsed. Expansion is session-local component state and is not remembered.
+
+Release Planning embeds the existing schedule component and editor unchanged. Phase Progress retains the existing phase cards, attention summary, filters, Boolean/percentage formatting, CAT Ready behavior, and RAID-derived table. VersionOne remains a separate detailed explorer opened from its workspace panel; its state is not duplicated. ServiceNow, ALM, and Release-level RAID linkage are explicit placeholders.
 
 ## Accessibility and responsiveness
 

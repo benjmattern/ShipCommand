@@ -72,6 +72,11 @@
 - Client validation improves feedback, while Local Integration API validation remains authoritative.
 - Draft release input and response-backed loaded release are separate UI states; changing input never relabels existing records.
 - Loading another release is explicit and read-only. Release catalog discovery and automatic synchronization remain deferred.
+- Release is the central UI domain object, and selecting a Release opens its Release Workspace.
+- `WorkspacePanel` is the reusable composition pattern for present and future Release capabilities.
+- The workspace composes established Planning and Phase Progress components and selectors instead of duplicating their behavior or state.
+- Enterprise panels attach to a Release progressively; unavailable data remains an explicit placeholder and is never inferred.
+- Panel expansion is local and non-persistent. A router, state library, and preference storage remain unjustified for this foundation.
 
 ## Current UI
 

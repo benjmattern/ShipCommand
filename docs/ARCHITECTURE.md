@@ -5,7 +5,7 @@ This document maps the implemented browser POC. For the broader platform bluepri
 - `App.tsx` owns the single in-memory RAID item array and all CRUD and priority mutations.
 - `connectors.ts` parses `BacklogData.xlsx` into the shared `DataRecord` model.
 - `releaseSelectors.ts` provides pure derived release-feature and release-summary views.
-- `ReleaseTracker.tsx` renders release overview and read-only release detail screens.
+- `ReleaseTracker.tsx` renders the release overview and owns session-only schedule state; `releases/ReleaseWorkspace.tsx` composes the selected Release through reusable workspace panels.
 - `raid.ts` centralizes RAID ID display formatting.
 - `microservices.ts` owns controlled microservice reference data, workbook normalization, and ID-to-name resolution.
 - `phases.ts` and `involvementTypes.ts` own controlled delivery reference data.

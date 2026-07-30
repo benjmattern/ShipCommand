@@ -62,6 +62,12 @@ Story and Defect records
 Optional RAID linkage
 ```
 
+## Release Workspace boundary
+
+Release is the application’s central domain object and the Release Workspace is its primary composition boundary. Existing schedule state and derived phase progress remain owned by their established modules; the workspace composes those capabilities through reusable panels rather than duplicating their state or calculations.
+
+Future enterprise integrations attach read-only summaries and drill-down actions to a Release panel. The current VersionOne panel links to the existing Story Explorer without changing its React → Python → PowerShell → VersionOne boundary. ServiceNow and ALM panels are placeholders only. No workspace persistence, synchronization process, or generic connector framework exists.
+
 ## Target logical architecture — vision
 
 ```text

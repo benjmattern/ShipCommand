@@ -246,7 +246,16 @@ function App() {
           </div>
         </section>
         </> : activeView === 'releases' ? (
-          <ReleaseTracker records={records} loadState={loadState} onOpenRecord={(record) => setModal({ mode: 'view', record })} />
+          <ReleaseTracker
+            records={records}
+            loadState={loadState}
+            onOpenRecord={(record) => setModal({ mode: 'view', record })}
+            onOpenVersionOne={() => setActiveView('versionone')}
+            onOpenRaid={(releaseId) => {
+              setSelectedRelease(releaseId);
+              setActiveView('raid');
+            }}
+          />
         ) : activeView === 'diagnostics' ? (
           <DiagnosticsPage />
         ) : (
