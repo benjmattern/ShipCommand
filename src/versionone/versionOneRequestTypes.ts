@@ -8,6 +8,7 @@ export interface VersionOneRequest {
   status: string | null;
   priority: string | null;
   ownerName: string | null;
+  planningLevelName: string | null;
 }
 
 export interface VersionOneRequestsResponse {
@@ -18,5 +19,6 @@ export interface VersionOneRequestsResponse {
   requests: VersionOneRequest[];
 }
 
-export type VersionOneRequestSortField = 'number' | 'name' | 'priority' | 'status' | 'ownerName' | 'assetState';
+export type VersionOneRequestSortField = 'number' | 'name' | 'planningLevelName' | 'priority' | 'status' | 'ownerName' | 'assetState';
 export type SortDirection = 'ascending' | 'descending';
+export type VersionOneRequestView = 'active-intake' | 'all-active' | 'release-assigned' | 'all';

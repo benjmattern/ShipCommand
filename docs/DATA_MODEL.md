@@ -71,6 +71,12 @@ The Local Integration API exposes external, read-only Stories and Defects with `
 
 The response includes Release, total, Story, Defect, and Other counts, total upstream page count, retrieval time, and duration. Records are not persisted and raw XML is excluded.
 
+## VersionOne Request
+
+`VersionOneRequest` is a separate read-only model with `id` and nullable `oid`, `href`, `number`, `name`, `assetState`, `status`, `priority`, `ownerName`, and `planningLevelName`. `planningLevelName` comes directly from VersionOne `Scope.Name`; missing values remain `null` and are never inferred. Asset State values are retained exactly as returned, such as `64` or `200`, because their meanings have not been confirmed.
+
+The stable `id` preference is OID, then href, then Request Number. The API retrieves all accessible Requests and removes duplicate stable identities across pages. Named views are client-side projections and do not change the normalized collection. A four-segment Planning Level may later become evidence for Request-to-Release mapping, but no mapping or relationship is part of the current model.
+
 ## Derived projections
 
 - Release features and summaries

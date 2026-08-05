@@ -88,7 +88,10 @@
 - Integration-specific identifiers and counts enrich Release fields incrementally. Missing values remain undefined and are displayed as placeholders rather than fabricated.
 - TSLC Project identity can be edited and validated locally, but this operation performs no ServiceNow lookup, diagnostic, synchronization, or persistence.
 - VersionOne Requests are an independent read-only source and top-level explorer. They do not replace, synchronize with, or change the first-class RAID backlog.
-- Request retrieval uses the fixed VersionOne `Data/Request` asset type and fixed fields Name, Number, AssetState, Status.Name, Priority.Name, and Owner.Name. Browser-controlled upstream query construction remains prohibited.
+- Request retrieval uses the fixed VersionOne `Data/Request` asset type and fixed fields Name, Number, AssetState, Status.Name, Priority.Name, Owner.Name, and Scope.Name. Browser-controlled upstream query construction remains prohibited.
+- `Scope.Name` is normalized without inference as nullable `planningLevelName`. Asset State values remain opaque source values until their meanings are confirmed.
+- The Request API continues retrieving all accessible Requests. Active Intake, All Active Requests, Release Assigned Requests, and All Accessible Requests are client-side views; Active Intake is the default and reproduces the currently observed VersionOne Planning page predicate.
+- Four numeric dot-separated Planning Levels are classified as release-like only to prepare for future investigation. They do not create a Request-to-Release relationship or mapping.
 - Request identity prefers OID, then href, then Request Number. Missing source values remain null, and duplicate stable identities retain the first normalized record.
 - Request-to-Epic relationships remain unverified and are deferred; the explorer does not infer or navigate relationships.
 

@@ -15,7 +15,8 @@ function isRequest(value: unknown): value is VersionOneRequest {
     && nullableString(request.assetState)
     && nullableString(request.status)
     && nullableString(request.priority)
-    && nullableString(request.ownerName);
+    && nullableString(request.ownerName)
+    && nullableString(request.planningLevelName);
 }
 
 function isRequestsResponse(value: unknown): value is VersionOneRequestsResponse {

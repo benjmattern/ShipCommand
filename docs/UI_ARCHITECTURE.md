@@ -12,7 +12,7 @@ The React POC uses local component state and CSS. `App.tsx` owns the RAID array 
 - **RAID modal:** details plus service, involvement, phase applicability, and progress editing.
 - **Diagnostics:** Enterprise Connections contains a VersionOne Local Integration API connectivity card.
 - **VersionOne Stories and Defects:** explicit load/refresh, retrieval summary, number/title search, type/status/team filters, and one read-only delivery-record table.
-- **VersionOne Requests:** independent explicit load/refresh, number/name search, status/priority/owner filters, sortable request table, and read-only details dialog.
+- **VersionOne Requests:** independent explicit load/refresh, named lifecycle views, number/name search, status/priority/owner/planning-level/asset-state filters, sortable request table, visible/total counts, and read-only details dialog.
 
 ## State principles
 
@@ -42,7 +42,11 @@ Successful release changes reset search, Type, status, and team filters, then sh
 
 VersionOne Requests is a separate top-level view; it is not merged with Stories, Releases, or RAID. Loading is explicit, refresh is user-triggered, and successful data remains session-only. Loading, sanitized error/retry, empty-source, and filtered-empty states are distinct.
 
-Search trims whitespace and matches Request Number or Request Name case-insensitively. Status, Priority, and Owner options derive dynamically from non-null returned values and sort alphabetically. Every displayed column—Number, Request, Priority, Status, Owner, and Asset State—is sortable; Number uses natural ordering so `R-2` precedes `R-10`. Selecting a keyboard-focusable row opens a read-only dialog containing Number, Name, Status, Priority, Owner, Asset State, OID, and href. The UI offers no editing, persistence, relationship navigation, or write-back.
+Search trims whitespace and matches Request Number or Request Name case-insensitively. Status, Priority, Owner, Planning Level, and Asset State options derive dynamically from non-null returned values and sort alphabetically. Every displayed column—Number, Request, Planning Level, Priority, Status, Owner, and Asset State—is sortable. Number retains natural ordering so `R-2` precedes `R-10`; Planning Level uses case-insensitive natural comparison where practical.
+
+The default **Active Intake** view reproduces the observed VersionOne Planning page predicate: Planning Level `MEPT: Package Platform-4724` and Asset State `64`. **All Active Requests** selects Asset State `64`; **Release Assigned Requests** selects Planning Levels matching four numeric dot-separated segments; **All Accessible Requests** imposes neither restriction. Views are client-side filters over the complete response and combine with the ordinary filters. The UI shows `Showing x of y Requests` using computed visible and total counts, and provides specific empty states for Active Intake, Release Assigned, and ordinary filter misses.
+
+Selecting a keyboard-focusable row opens a read-only dialog containing Number, Name, Planning Level, Priority, Status, Owner, Asset State, OID, and href. The UI offers no editing, persistence, relationship navigation, or write-back.
 
 ## Release Workspace
 

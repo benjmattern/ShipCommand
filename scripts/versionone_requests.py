@@ -83,6 +83,7 @@ def parse_versionone_request_xml(xml_text: str) -> list[dict[str, Any]]:
             "status": extract_value(asset, "Status.Name"),
             "priority": extract_value(asset, "Priority.Name"),
             "ownerName": extract_value(asset, "Owner.Name"),
+            "planningLevelName": extract_value(asset, "Scope.Name"),
         })
     return requests
 

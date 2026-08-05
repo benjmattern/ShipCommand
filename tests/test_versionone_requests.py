@@ -41,6 +41,7 @@ def request_asset(index, *, oid=True, href=True, number=True, namespace_values=F
         f'<Attribute name="Status.Name">{value("Open")}</Attribute>',
         f'<Attribute name="Priority.Name">{value("High")}</Attribute>',
         f'<Attribute name="Owner.Name">{value("Owner One")}</Attribute>',
+        f'<Attribute name="Scope.Name">{value("MEPT: Package Platform-4724")}</Attribute>',
     ])
     identity = f' id="Request:{index}"' if oid else ""
     link = f' href="https://versionone.usps.gov/Request/{index}"' if href else ""
@@ -65,13 +66,14 @@ class RequestXmlTests(unittest.TestCase):
             "status": "Open",
             "priority": "High",
             "ownerName": "Owner One",
+            "planningLevelName": "MEPT: Package Platform-4724",
         }, request)
 
     def test_missing_fields_are_null(self):
         request = parse_versionone_request_xml(
             "<Assets><Asset id='Request:1'><Attribute name='Name'/></Asset></Assets>"
         )[0]
-        for field in ("href", "number", "name", "assetState", "status", "priority", "ownerName"):
+        for field in ("href", "number", "name", "assetState", "status", "priority", "ownerName", "planningLevelName"):
             self.assertIsNone(request[field])
 
     def test_namespace_safe_value_nodes_and_multiple_assets(self):
@@ -163,27 +165,63 @@ class RequestExplorerLogicTests(unittest.TestCase):
         module = (ROOT / "src" / "versionone" / "versionOneRequestFilters.ts").as_uri()
         script = f"""
           import assert from 'node:assert/strict';
-          import {{ filterVersionOneRequests, requestFilterOptions, sortVersionOneRequests }} from '{module}';
+          import {{ filterVersionOneRequests, isReleasePlanningLevel, matchesRequestView, requestFilterOptions, sortVersionOneRequests }} from '{module}';
           const requests = [
-            {{ id: '10', oid: 'Request:10', href: null, number: 'R-10', name: 'Zeta Request', assetState: 'Active', status: 'Open', priority: 'Low', ownerName: 'Zoe' }},
-            {{ id: '2', oid: 'Request:2', href: null, number: 'R-2', name: 'Alpha Request', assetState: 'Closed', status: 'Done', priority: 'High', ownerName: 'Amy' }},
-            {{ id: '3', oid: 'Request:3', href: null, number: null, name: null, assetState: null, status: null, priority: null, ownerName: null }},
+            {{ id: '10', oid: 'Request:10', href: null, number: 'R-10', name: 'Zeta Request', assetState: '64', status: 'Open', priority: 'Low', ownerName: 'Zoe', planningLevelName: 'MEPT: Package Platform-4724' }},
+            {{ id: '2', oid: 'Request:2', href: null, number: 'R-2', name: 'Alpha Request', assetState: '200', status: 'Done', priority: 'High', ownerName: 'Amy', planningLevelName: '29.0.0.0' }},
+            {{ id: '3', oid: 'Request:3', href: null, number: null, name: null, assetState: '64', status: null, priority: null, ownerName: null, planningLevelName: null }},
           ];
-          assert.deepEqual(filterVersionOneRequests(requests, '  r-2  ', '', '', '').map(item => item.id), ['2']);
-          assert.deepEqual(filterVersionOneRequests(requests, 'ALPHA', '', '', '').map(item => item.id), ['2']);
-          assert.deepEqual(filterVersionOneRequests(requests, '', 'Open', '', '').map(item => item.id), ['10']);
-          assert.deepEqual(filterVersionOneRequests(requests, '', '', 'High', '').map(item => item.id), ['2']);
-          assert.deepEqual(filterVersionOneRequests(requests, '', '', '', 'Zoe').map(item => item.id), ['10']);
+          const filter = (search='', status='', priority='', owner='', level='', state='', view='all') => filterVersionOneRequests(requests, search, status, priority, owner, level, state, view).map(item => item.id);
+          assert.deepEqual(filter('  r-2  '), ['2']);
+          assert.deepEqual(filter('ALPHA'), ['2']);
+          assert.deepEqual(filter('', 'Open'), ['10']);
+          assert.deepEqual(filter('', '', 'High'), ['2']);
+          assert.deepEqual(filter('', '', '', 'Zoe'), ['10']);
+          assert.deepEqual(filter('', '', '', '', '29.0.0.0'), ['2']);
+          assert.deepEqual(filter('', '', '', '', '', '64'), ['10', '3']);
+          assert.deepEqual(filter('', '', '', '', '', '', 'active-intake'), ['10']);
+          assert.deepEqual(filter('', '', '', '', '', '', 'all-active'), ['10', '3']);
+          assert.deepEqual(filter('', '', '', '', '', '', 'release-assigned'), ['2']);
+          assert.deepEqual(filter('', '', '', '', '', '', 'all'), ['10', '2', '3']);
+          assert.deepEqual(filter('', 'Open', 'Low', 'Zoe', 'MEPT: Package Platform-4724', '64', 'active-intake'), ['10']);
+          assert.equal(matchesRequestView(requests[0], 'active-intake'), true);
+          assert.equal(isReleasePlanningLevel('29.0.0.0'), true);
+          assert.equal(isReleasePlanningLevel('R29.0.0.0'), false);
+          assert.equal(isReleasePlanningLevel('29.0.0'), false);
+          assert.equal(isReleasePlanningLevel(null), false);
           assert.deepEqual(requestFilterOptions(requests, 'status'), ['Done', 'Open']);
           assert.deepEqual(requestFilterOptions(requests, 'priority'), ['High', 'Low']);
           assert.deepEqual(requestFilterOptions(requests, 'ownerName'), ['Amy', 'Zoe']);
+          assert.deepEqual(requestFilterOptions(requests, 'planningLevelName'), ['29.0.0.0', 'MEPT: Package Platform-4724']);
+          assert.deepEqual(requestFilterOptions(requests, 'assetState'), ['200', '64']);
           assert.deepEqual(sortVersionOneRequests(requests.slice(0, 2), 'number', 'ascending').map(item => item.number), ['R-2', 'R-10']);
+          const levels = [
+            {{ ...requests[0], id: 'a', planningLevelName: '30.0.0.0' }},
+            {{ ...requests[0], id: 'b', planningLevelName: '9.0.0.0' }},
+          ];
+          assert.deepEqual(sortVersionOneRequests(levels, 'planningLevelName', 'ascending').map(item => item.id), ['b', 'a']);
         """
         completed = subprocess.run(
             ["node", "--experimental-strip-types", "--input-type=module", "--eval", script],
             cwd=ROOT, capture_output=True, text=True, timeout=15, check=False,
         )
         self.assertEqual(0, completed.returncode, completed.stderr)
+
+    def test_page_exposes_counts_empty_states_and_read_only_details(self):
+        page = (ROOT / "src" / "versionone" / "VersionOneRequestsPage.tsx").read_text(encoding="utf-8")
+        for expected in (
+            "Showing {displayedRequests.length} of {result.recordCount} Requests",
+            "No active intake Requests found.",
+            "No release-assigned Requests found.",
+            "No Requests match current filters.",
+            "<dt>Planning Level</dt>",
+            "<dt>Asset State</dt>",
+            "<dt>OID</dt>",
+            "<dt>href</dt>",
+            "Read-only VersionOne data.",
+        ):
+            self.assertIn(expected, page)
+        self.assertNotIn("Save Request", page)
 
 
 class RequestApiTests(unittest.TestCase):

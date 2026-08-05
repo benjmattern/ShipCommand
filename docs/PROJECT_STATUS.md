@@ -30,6 +30,7 @@ ShipCommand is the foundation of a Release Operations Platform and unified relea
 - VersionOne Defect Story Support: combined Story/Defect retrieval, server-side type classification, counts, Type badges, and filtering
 - VersionOne Release Querying v1: user-entered validated release loading, distinct draft/requested/loaded state, loaded-release refresh, and release-specific empty/error behavior
 - VersionOne Request Explorer v1: fixed `Data/Request` retrieval, complete paging, normalized Request JSON, independent top-level read-only explorer, filters, sorting, and details
+- VersionOne Request Planning Level and Views v1: `Scope.Name` normalization, Planning Level and Asset State controls, Active Intake default, and all-active/release-assigned/all-accessible views
 - Release Workspace Foundation v1: Release-centered workspace, sticky context header, reusable collapsible panels, and preserved Planning and Phase Progress experiences
 - ServiceNow Connectivity Spike v1: locally configured read-only diagnostic endpoint, controlled PowerShell request, sanitized authentication/response classification, and Diagnostics card
 - Release Identity v1: normalized first-class Release model, lightweight ReleaseStore, Release-backed workspace summaries, and session-only TSLC Project identity editing
@@ -40,7 +41,9 @@ CAT Ready readiness is currently user-entered. Derived readiness, deployment ver
 
 VersionOne connectivity through controlled PowerShell default credentials is proven on the USPS work computer. `/api/versionone/stories` and the Story Explorer accept arbitrary validated four-segment releases, with `29.0.0.0` remaining the initial default. Fixed upstream Story and Defect asset requests are merged into one collection. Live validation of at least one additional release and Defect XML conventions remains pending; release discovery, automatic synchronization, RAID matching, and Release Tracker integration remain deferred.
 
-`/api/versionone/requests` independently queries the confirmed VersionOne `Request` asset type with fixed fields: Name, Number, AssetState, Status.Name, Priority.Name, and Owner.Name. The Request Explorer is read-only and session-only; it does not replace or synchronize with the first-class RAID backlog. Request-to-Epic relationships remain under investigation and are not represented as facts or navigation.
+`/api/versionone/requests` independently queries the confirmed VersionOne `Request` asset type with fixed fields: Name, Number, AssetState, Status.Name, Priority.Name, Owner.Name, and Scope.Name. Scope is normalized as Planning Level while Asset State remains uninterpreted. ShipCommand intentionally retains all accessible Requests; the default Active Intake view applies the observed VersionOne Planning page predicate (`MEPT: Package Platform-4724` and Asset State `64`) on the client. Count differences from All Accessible are therefore expected filtering differences.
+
+The Request Explorer is read-only and session-only; it does not replace or synchronize with the first-class RAID backlog. Release-like Planning Levels may later support Request-to-Release investigation, but no mapping is implemented. Request-to-Epic relationships also remain under investigation.
 
 Release is now the primary UI context. Selecting one from the Releases overview opens its Release Workspace. Overview, Release Planning, and Phase Progress are initially expanded; VersionOne, ServiceNow, ALM, and RAID are compact collapsed panels. ServiceNow, ALM, and Release-level RAID linkage remain placeholders rather than claimed integrations.
 

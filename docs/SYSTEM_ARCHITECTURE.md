@@ -52,11 +52,13 @@ Python parses each XML page once, normalizes and deduplicates records by stable 
 
 ## VersionOne Request Explorer v1
 
-`GET /api/versionone/requests` is a separate read-only path through the same React → Python Local Integration API → controlled PowerShell → VersionOne REST XML architecture. PowerShell fixes the upstream asset at `Data/Request`, selects Name, Number, AssetState, Status.Name, Priority.Name, and Owner.Name, uses Windows default credentials, and retrieves fixed 100-record pages. The browser cannot control the endpoint, fields, headers, paging, credentials, command, or XML.
+`GET /api/versionone/requests` is a separate read-only path through the same React → Python Local Integration API → controlled PowerShell → VersionOne REST XML architecture. PowerShell fixes the upstream asset at `Data/Request`, selects Name, Number, AssetState, Status.Name, Priority.Name, Owner.Name, and Scope.Name, uses Windows default credentials, and retrieves fixed 100-record pages. The browser cannot control the endpoint, fields, headers, paging, credentials, command, or XML.
 
 Python performs namespace-safe parsing, maps absent XML values to null, and selects stable identity in OID → href → Request Number order. It deduplicates across pages, stops at an empty or partial page, enforces the existing 100-page safety limit, and returns normalized JSON without raw XML. Request retrieval has no release parameter, persistence, background refresh, write-back, or RAID synchronization.
 
 Request is confirmed as the VersionOne asset type used by this explorer. Its relationship to Epic assets is still an investigation question; no relationship field or behavior is assumed.
+
+`Scope.Name` is normalized as nullable `planningLevelName`. The API continues to return all accessible Requests; Active Intake, All Active Requests, Release Assigned Requests, and All Accessible Requests are client-side projections. A release-shaped Planning Level is only a candidate signal for future Request-to-Release investigation and does not currently establish a relationship.
 
 Likely future architecture, not implemented:
 

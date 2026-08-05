@@ -18,12 +18,14 @@ This is a directional backlog, not a delivery commitment. Prefer validated verti
 12. **Complete:** ServiceNow Connectivity Spike with local configuration, controlled authentication test, sanitized classification, and Diagnostics card.
 13. **Complete:** Release Identity v1 with normalized Release model, selected-Release store, Release-backed workspace fields, and local TSLC Project metadata editing.
 14. **Complete:** VersionOne Request Explorer v1 with fixed read-only `Data/Request` paging, normalized Request JSON, independent search/filters/sorting, and read-only details.
-15. Validate ServiceNow connectivity and authentication behavior on the USPS work computer.
-16. Validate full R29 and an additional release: Story and Defect statuses, teams, owners, missing fields, duplicates, asset conventions, and anomalies.
-17. Determine Request-to-Epic relationships and Story/Defect-to-RAID and Story-to-Feature relationship rules without assuming unverified fields.
-18. Add Release/phase boundary warnings and phase-overlap warnings.
-19. Add actual dates and schedule variance.
-20. Add one read-only testing slice from ALM data.
+15. **Complete:** VersionOne Request Planning Level and Views v1 with `Scope.Name`, Active Intake, All Active, Release Assigned, and All Accessible client-side views.
+16. Validate ServiceNow connectivity and authentication behavior on the USPS work computer.
+17. Validate full R29 and an additional release: Story and Defect statuses, teams, owners, missing fields, duplicates, asset conventions, and anomalies.
+18. Investigate governed Request-to-Release mapping using Planning Level without assuming release-like values are sufficient identity.
+19. Determine Request-to-Epic relationships and Story/Defect-to-RAID and Story-to-Feature relationship rules without assuming unverified fields.
+20. Add Release/phase boundary warnings and phase-overlap warnings.
+21. Add actual dates and schedule variance.
+22. Add one read-only testing slice from ALM data.
 
 ## Platform foundations to validate
 

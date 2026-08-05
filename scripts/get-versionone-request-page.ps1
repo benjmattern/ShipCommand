@@ -13,7 +13,7 @@ $ErrorActionPreference = "Stop"
 
 $endpoint = "https://versionone.usps.gov/v1/rest-1.v1/Data/Request"
 $query = @{
-    sel = "Name,Number,AssetState,Status.Name,Priority.Name,Owner.Name"
+    sel = "Name,Number,AssetState,Status.Name,Priority.Name,Owner.Name,Scope.Name"
     page = "$PageSize,$Offset"
 }
 $queryString = ($query.GetEnumerator() | ForEach-Object {
