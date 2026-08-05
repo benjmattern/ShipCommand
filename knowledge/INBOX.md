@@ -14,6 +14,12 @@ Do not paste secrets, authentication data, PII, production records, confidential
 - Destination: _Likely knowledge file_
 - Status: New
 
+## Version One Requests
+- https://versionone.usps.gov/v1/Default.aspx?menu=RequestsPlanningPage&feat-nav=--m2
+- possible use case of new product backlog
+- RAID ID will roughly translate to Request
+- some needed fields do not exist in Requests and can't be added, will still need project memory at some point.
+
 git add knowledge
-git commit -m "Add generic push"
+git commit -m "VersionOne Request Link"
 git push
