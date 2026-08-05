@@ -87,6 +87,10 @@
 - Existing RAID records and schedules retain Release-name compatibility keys while consumers progressively adopt the shared Release object.
 - Integration-specific identifiers and counts enrich Release fields incrementally. Missing values remain undefined and are displayed as placeholders rather than fabricated.
 - TSLC Project identity can be edited and validated locally, but this operation performs no ServiceNow lookup, diagnostic, synchronization, or persistence.
+- VersionOne Requests are an independent read-only source and top-level explorer. They do not replace, synchronize with, or change the first-class RAID backlog.
+- Request retrieval uses the fixed VersionOne `Data/Request` asset type and fixed fields Name, Number, AssetState, Status.Name, Priority.Name, and Owner.Name. Browser-controlled upstream query construction remains prohibited.
+- Request identity prefers OID, then href, then Request Number. Missing source values remain null, and duplicate stable identities retain the first normalized record.
+- Request-to-Epic relationships remain unverified and are deferred; the explorer does not infer or navigate relationships.
 
 ## Current UI
 

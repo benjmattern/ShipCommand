@@ -17,12 +17,13 @@ This is a directional backlog, not a delivery commitment. Prefer validated verti
 11. **Complete:** Release Workspace Foundation, reusable Workspace Panel, sticky Release header, and existing Planning and Phase Progress composition.
 12. **Complete:** ServiceNow Connectivity Spike with local configuration, controlled authentication test, sanitized classification, and Diagnostics card.
 13. **Complete:** Release Identity v1 with normalized Release model, selected-Release store, Release-backed workspace fields, and local TSLC Project metadata editing.
-14. Validate ServiceNow connectivity and authentication behavior on the USPS work computer.
-15. Validate full R29 and an additional release: Story and Defect statuses, teams, owners, missing fields, duplicates, asset conventions, and anomalies.
-16. Determine Story/Defect-to-RAID and Story-to-Feature relationship rules and a governed stable identifier.
-17. Add Release/phase boundary warnings and phase-overlap warnings.
-18. Add actual dates and schedule variance.
-19. Add one read-only testing slice from ALM data.
+14. **Complete:** VersionOne Request Explorer v1 with fixed read-only `Data/Request` paging, normalized Request JSON, independent search/filters/sorting, and read-only details.
+15. Validate ServiceNow connectivity and authentication behavior on the USPS work computer.
+16. Validate full R29 and an additional release: Story and Defect statuses, teams, owners, missing fields, duplicates, asset conventions, and anomalies.
+17. Determine Request-to-Epic relationships and Story/Defect-to-RAID and Story-to-Feature relationship rules without assuming unverified fields.
+18. Add Release/phase boundary warnings and phase-overlap warnings.
+19. Add actual dates and schedule variance.
+20. Add one read-only testing slice from ALM data.
 
 ## Platform foundations to validate
 

@@ -50,6 +50,14 @@ The current endpoint is diagnostic only. This is a local POC boundary, not an ap
 
 Python parses each XML page once, normalizes and deduplicates records by stable ID, and returns JSON only. Raw XML never crosses the React boundary. Retrieval is capped at 100 pages per fixed asset type and remains an explicit, uncached, non-persistent local POC operation.
 
+## VersionOne Request Explorer v1
+
+`GET /api/versionone/requests` is a separate read-only path through the same React → Python Local Integration API → controlled PowerShell → VersionOne REST XML architecture. PowerShell fixes the upstream asset at `Data/Request`, selects Name, Number, AssetState, Status.Name, Priority.Name, and Owner.Name, uses Windows default credentials, and retrieves fixed 100-record pages. The browser cannot control the endpoint, fields, headers, paging, credentials, command, or XML.
+
+Python performs namespace-safe parsing, maps absent XML values to null, and selects stable identity in OID → href → Request Number order. It deduplicates across pages, stops at an empty or partial page, enforces the existing 100-page safety limit, and returns normalized JSON without raw XML. Request retrieval has no release parameter, persistence, background refresh, write-back, or RAID synchronization.
+
+Request is confirmed as the VersionOne asset type used by this explorer. Its relationship to Epic assets is still an investigation question; no relationship field or behavior is assumed.
+
 Likely future architecture, not implemented:
 
 ```text

@@ -24,6 +24,11 @@ from versionone_stories import (
     retrieve_versionone_page,
     validate_release,
 )
+from versionone_requests import (
+    VersionOneRequestsError,
+    retrieve_all_requests,
+    retrieve_versionone_request_page,
+)
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parent.parent
@@ -32,6 +37,7 @@ VERSIONONE_HELPER = Path(__file__).resolve().parent / "test-versionone-connectio
 SERVICENOW_HELPER = Path(__file__).resolve().parent / "test-servicenow-connection.ps1"
 LOCAL_API_PATH = "/api/versionone/test"
 STORIES_API_PATH = "/api/versionone/stories"
+REQUESTS_API_PATH = "/api/versionone/requests"
 SERVICENOW_API_PATH = "/api/servicenow/test"
 SUBPROCESS_TIMEOUT_SECONDS = 35
 
@@ -242,6 +248,21 @@ def run_versionone_stories(release: str) -> dict[str, Any]:
     )
 
 
+def run_versionone_requests() -> dict[str, Any]:
+    executable = find_powershell()
+    if not executable:
+        raise VersionOneRequestsError(
+            "VersionOne requests could not be retrieved.",
+            "The local integration API could not find a supported PowerShell executable.",
+        )
+    return retrieve_all_requests(
+        fetch_page=lambda offset: retrieve_versionone_request_page(
+            offset,
+            powershell_executable=executable,
+        ),
+    )
+
+
 def servicenow_result(
     *,
     ok: bool,
@@ -434,6 +455,7 @@ def create_request_handler(
     demo_directory: Path,
     diagnostic: Callable[[], tuple[int, dict[str, Any]]] = run_versionone_diagnostic,
     stories: Callable[[str], dict[str, Any]] = run_versionone_stories,
+    requests: Callable[[], dict[str, Any]] = run_versionone_requests,
     servicenow_diagnostic: Callable[[], tuple[int, dict[str, Any]]] = run_servicenow_diagnostic,
 ) -> type[BaseHTTPRequestHandler]:
     resolved_demo = demo_directory.resolve()
@@ -449,6 +471,9 @@ def create_request_handler(
                 return
             if request_path == STORIES_API_PATH:
                 self._serve_versionone_stories(parsed_request.query)
+                return
+            if request_path == REQUESTS_API_PATH:
+                self._serve_versionone_requests(parsed_request.query)
                 return
             if request_path == SERVICENOW_API_PATH:
                 self._serve_servicenow_diagnostic(parsed_request.query)
@@ -505,6 +530,44 @@ def create_request_handler(
                 "message": message,
                 "technicalDetail": technical_detail,
                 "release": release,
+            }
+            if upstream_status is not None:
+                payload["upstreamHttpStatus"] = upstream_status
+            self._send_json(status_code, payload)
+
+        def _serve_versionone_requests(self, query_string: str) -> None:
+            if query_string:
+                self._send_request_error(400, "VersionOne Request parameters are not accepted.")
+                return
+            try:
+                result = requests()
+            except VersionOneRequestsError as error:
+                local_status = 504 if "timeout" in error.technical_detail.lower() else 502
+                self._send_request_error(
+                    local_status, error.message, error.technical_detail, error.upstream_status,
+                )
+                return
+            except Exception as error:
+                print(f"Request retrieval error: {type(error).__name__}", file=sys.stderr)
+                self._send_request_error(
+                    500,
+                    "VersionOne requests could not be retrieved.",
+                    f"{type(error).__name__}; see the local server console.",
+                )
+                return
+            self._send_json(200, result)
+
+        def _send_request_error(
+            self,
+            status_code: int,
+            message: str,
+            technical_detail: str | None = None,
+            upstream_status: int | None = None,
+        ) -> None:
+            payload = {
+                "status": "failed",
+                "message": message,
+                "technicalDetail": technical_detail,
             }
             if upstream_status is not None:
                 payload["upstreamHttpStatus"] = upstream_status
@@ -591,13 +654,14 @@ def create_server(
     demo_directory: Path = DEMO_DIRECTORY,
     diagnostic: Callable[[], tuple[int, dict[str, Any]]] = run_versionone_diagnostic,
     stories: Callable[[str], dict[str, Any]] = run_versionone_stories,
+    requests: Callable[[], dict[str, Any]] = run_versionone_requests,
     servicenow_diagnostic: Callable[[], tuple[int, dict[str, Any]]] = run_servicenow_diagnostic,
 ) -> ThreadingHTTPServer:
     if not (demo_directory / "index.html").is_file():
         raise FileNotFoundError(f"ShipCommand demo build was not found: {demo_directory}")
     return ThreadingHTTPServer((
         host, port
-    ), create_request_handler(demo_directory, diagnostic, stories, servicenow_diagnostic))
+    ), create_request_handler(demo_directory, diagnostic, stories, requests, servicenow_diagnostic))
 
 
 def parse_arguments() -> argparse.Namespace:
@@ -625,6 +689,7 @@ def main() -> int:
     print("API:")
     print(f"GET {LOCAL_API_PATH}")
     print(f"GET {STORIES_API_PATH}")
+    print(f"GET {REQUESTS_API_PATH}")
     print(f"GET {SERVICENOW_API_PATH}")
     print()
     print("Press Ctrl+C to stop.")

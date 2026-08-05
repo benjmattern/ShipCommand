@@ -12,6 +12,7 @@ The React POC uses local component state and CSS. `App.tsx` owns the RAID array 
 - **RAID modal:** details plus service, involvement, phase applicability, and progress editing.
 - **Diagnostics:** Enterprise Connections contains a VersionOne Local Integration API connectivity card.
 - **VersionOne Stories and Defects:** explicit load/refresh, retrieval summary, number/title search, type/status/team filters, and one read-only delivery-record table.
+- **VersionOne Requests:** independent explicit load/refresh, number/name search, status/priority/owner filters, sortable request table, and read-only details dialog.
 
 ## State principles
 
@@ -36,6 +37,12 @@ The ServiceNow card is a separate, user-triggered connectivity spike using `/api
 VersionOne is a top-level view with local page state and no automatic startup load. A labeled release input begins at `29.0.0.0`, validates four numeric segments client-side, and submits only explicit user-triggered loads. Draft input, the in-flight requested release, and the response-backed loaded release remain distinct: editing does not relabel current results, failure preserves prior results, and Refresh reloads the loaded release rather than an unrelated draft.
 
 Successful release changes reset search, Type, status, and team filters, then show release-specific retrieval metadata plus total, Story, Defect, and optional Other counts. The unified table includes a Type badge and Title column. Search covers B-/D- numbers and titles; Type, status, and team filters combine with search, while status and team options derive from the complete returned collection. Loading, sanitized release-specific error/retry, valid empty-release, and no-filter-match states are explicit.
+
+## VersionOne Request Explorer
+
+VersionOne Requests is a separate top-level view; it is not merged with Stories, Releases, or RAID. Loading is explicit, refresh is user-triggered, and successful data remains session-only. Loading, sanitized error/retry, empty-source, and filtered-empty states are distinct.
+
+Search trims whitespace and matches Request Number or Request Name case-insensitively. Status, Priority, and Owner options derive dynamically from non-null returned values and sort alphabetically. Every displayed column—Number, Request, Priority, Status, Owner, and Asset State—is sortable; Number uses natural ordering so `R-2` precedes `R-10`. Selecting a keyboard-focusable row opens a read-only dialog containing Number, Name, Status, Priority, Owner, Asset State, OID, and href. The UI offers no editing, persistence, relationship navigation, or write-back.
 
 ## Release Workspace
 
