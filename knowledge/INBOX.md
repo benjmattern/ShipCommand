@@ -13,3 +13,7 @@ Do not paste secrets, authentication data, PII, production records, confidential
 - Questions: _What needs investigation_
 - Destination: _Likely knowledge file_
 - Status: New
+
+git add knowledge
+git commit -m "Add generic push"
+git push
