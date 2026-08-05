@@ -19,7 +19,9 @@ Do not paste secrets, authentication data, PII, production records, confidential
 - possible use case of new product backlog
 - RAID ID will roughly translate to Request
 - some needed fields do not exist in Requests and can't be added, will still need project memory at some point.
+-TRY: https://versionone.usps.gov/v1/rest-1.v1/Data/Request
+
 
 git add knowledge
-git commit -m "VersionOne Request Link"
+git commit -m "VersionOne Request API Test"
 git push

@@ -1,27 +1,37 @@
-# Investigation: VersionOne Requests
+## Requests Planning Page
 
-## Objective
+Status: 🟡 Discovered (not yet investigated)
 
-Determine how Request screens, fields, relationships, and approved interfaces can support ShipCommand workflows.
+### URL
 
-## Known links and navigation
+https://versionone.usps.gov/v1/Default.aspx?menu=RequestsPlanningPage&feat-nav=--m2
 
-- _Add safe links or navigation paths._
+### Purpose
 
-## Observations
+VersionOne Requests planning view.
 
-- YYYY-MM-DD — _Add a sanitized observation and its source._
+Potential source for ShipCommand's future Request Backlog.
 
-## Candidate endpoints
+### Questions
 
-| Method | Path | Hypothesis | Validation status |
-| --- | --- | --- | --- |
-| _Add_ | _Add_ | _Add_ | Not tested |
+- What VersionOne asset type backs this page?
+- Is it `Data/Request`?
+- Are Requests paged like Stories?
+- Does this page expose Requests not yet assigned to a Release?
+- Does it include Request → Epic relationships?
+- Which fields are displayed?
+- Is priority exposed?
+- Is Requested By exposed?
+- Are custom USPS fields present?
 
-## Open questions
+### Next Test
 
-- _Add question and next step._
+Attempt retrieval through:
 
-## Conclusions
+Data/Request
 
-- _Move confirmed, durable VersionOne facts to `integrations/VersionOne.md`._
+using the existing Local Integration API architecture.
+
+### Notes
+
+Candidate replacement for the current Excel intake backlog, but not a replacement for the existing RAID register in ShipCommand.
