@@ -92,6 +92,10 @@
 - `Scope.Name` is normalized without inference as nullable `planningLevelName`. Asset State values remain opaque source values until their meanings are confirmed.
 - The Request API continues retrieving all accessible Requests. Active Intake, All Active Requests, Release Assigned Requests, and All Accessible Requests are client-side views; Active Intake is the default and reproduces the currently observed VersionOne Planning page predicate.
 - Four numeric dot-separated Planning Levels are classified as release-like only to prepare for future investigation. They do not create a Request-to-Release relationship or mapping.
+- Enterprise browser integrations consume the centralized application configuration layer for API resolution and feature availability. UI components do not own environment-specific enterprise endpoints.
+- The supported environment vocabulary is `development`, `enterprise`, and `github-pages`, with detection intentionally resolving to `development` until a deployment increment supplies an approved signal.
+- The API base remains empty and all current feature flags remain true, preserving same-origin `/api/...` behavior and visible navigation. Future targets include local development, GitHub Pages, and the USPS intranet without changing UI or integration component code.
+- Configuration is compile-time TypeScript only. Environment variables, runtime editing, browser storage, Context, dependency injection, and configuration packages remain unjustified.
 - Request identity prefers OID, then href, then Request Number. Missing source values remain null, and duplicate stable identities retain the first normalized record.
 - Request-to-Epic relationships remain unverified and are deferred; the explorer does not infer or navigate relationships.
 

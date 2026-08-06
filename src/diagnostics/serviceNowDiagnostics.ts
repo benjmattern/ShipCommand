@@ -1,3 +1,5 @@
+import { getApiUrl } from '../config';
+
 export type ServiceNowResponseKind = 'json' | 'xml' | 'html' | 'empty' | 'unknown';
 export type ServiceNowAuthenticationOutcome =
   | 'authenticated-response'
@@ -26,7 +28,7 @@ export interface ServiceNowDiagnosticResult {
   message: string;
 }
 
-export const serviceNowDiagnosticApiPath = '/api/servicenow/test';
+export const serviceNowDiagnosticApiPath = getApiUrl('/api/servicenow/test');
 
 function isServiceNowResult(value: unknown): value is ServiceNowDiagnosticResult {
   if (!value || typeof value !== 'object') return false;

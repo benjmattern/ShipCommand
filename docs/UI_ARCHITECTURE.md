@@ -23,6 +23,7 @@ The React POC uses local component state and CSS. `App.tsx` owns the RAID array 
 - View, selected release, selected phase, modal, and drag state are local UI concerns.
 - No router or state library is justified by current scope.
 - Diagnostic status and sanitized result metadata remain session-only in the VersionOne card.
+- UI components consume centralized readonly feature configuration and no longer directly assume where enterprise API routes are hosted. All current flags remain enabled, so navigation and rendering are unchanged.
 
 ## Enterprise connectivity diagnostics
 

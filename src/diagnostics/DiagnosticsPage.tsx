@@ -1,5 +1,6 @@
 import { VersionOneDiagnosticCard } from './VersionOneDiagnosticCard';
 import { ServiceNowDiagnosticCard } from './ServiceNowDiagnosticCard';
+import { applicationConfig } from '../config';
 
 export function DiagnosticsPage() {
   return (
@@ -8,8 +9,8 @@ export function DiagnosticsPage() {
         <h2 id="enterprise-connections-heading">Enterprise Connections</h2>
         <p>Read-only tests report sanitized connection metadata and do not retain response content.</p>
       </div>
-      <VersionOneDiagnosticCard />
-      <ServiceNowDiagnosticCard />
+      {applicationConfig.versionOneEnabled && <VersionOneDiagnosticCard />}
+      {applicationConfig.serviceNowEnabled && <ServiceNowDiagnosticCard />}
     </section>
   );
 }

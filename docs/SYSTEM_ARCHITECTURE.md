@@ -25,6 +25,14 @@ RAID and Release views
 
 The personal development computer builds `dist/`. The work computer runs the Python Local Integration API, which serves the committed `demo/` build.
 
+## Application Configuration Layer v1
+
+The React application now separates environment configuration from UI and enterprise integration modules through lightweight TypeScript modules in `src/config/`. The layer defines the supported `development`, `enterprise`, and `github-pages` environment names, central API resolution, feature helpers, and one readonly aggregate configuration object. Detection currently resolves to `development`; no environment variables, browser storage, runtime editing, or user-visible configuration exists.
+
+`getApiBaseUrl()` currently returns an empty string, preserving every existing same-origin `/api/...` request and API contract. VersionOne Stories, VersionOne Requests, VersionOne Diagnostics, and ServiceNow Diagnostics construct their local API paths through the centralized resolver rather than embedding an API-host assumption. Authentication, headers, PowerShell, upstream enterprise URLs, and XML remain owned by the existing Local Integration API boundary.
+
+Feature helpers for enterprise integrations, VersionOne, ServiceNow, ALM, and Diagnostics currently return true, so navigation and behavior are unchanged. They establish a future deployment-mode seam only; GitHub Pages routing, environment-specific API hosts, localhost experiments, and enterprise deployment are not implemented by this increment.
+
 ## Local Integration API — VersionOne Connectivity v1
 
 The direct-browser VersionOne spike failed on the USPS work computer with `TypeError: Failed to fetch` and no readable HTTP response. Direct navigation still returned XML, proving browser-session and network access but not JavaScript cross-origin access.

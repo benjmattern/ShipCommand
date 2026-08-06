@@ -1,8 +1,9 @@
 import type { ConnectionTestResult } from './diagnosticTypes';
+import { getApiUrl } from '../config';
 
 export const versionOneStoryEndpoint = 'https://versionone.usps.gov/v1/rest-1.v1/Data/Story';
 export const versionOneDiagnosticRelease = '29.0.0.0';
-export const versionOneDiagnosticApiPath = '/api/versionone/test';
+export const versionOneDiagnosticApiPath = getApiUrl('/api/versionone/test');
 
 type DiagnosticFetch = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
 

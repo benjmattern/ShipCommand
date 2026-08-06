@@ -19,15 +19,21 @@ This is a directional backlog, not a delivery commitment. Prefer validated verti
 13. **Complete:** Release Identity v1 with normalized Release model, selected-Release store, Release-backed workspace fields, and local TSLC Project metadata editing.
 14. **Complete:** VersionOne Request Explorer v1 with fixed read-only `Data/Request` paging, normalized Request JSON, independent search/filters/sorting, and read-only details.
 15. **Complete:** VersionOne Request Planning Level and Views v1 with `Scope.Name`, Active Intake, All Active, Release Assigned, and All Accessible client-side views.
-16. Validate ServiceNow connectivity and authentication behavior on the USPS work computer.
-17. Validate full R29 and an additional release: Story and Defect statuses, teams, owners, missing fields, duplicates, asset conventions, and anomalies.
-18. Investigate governed Request-to-Release mapping using Planning Level without assuming release-like values are sufficient identity.
-19. Determine Request-to-Epic relationships and Story/Defect-to-RAID and Story-to-Feature relationship rules without assuming unverified fields.
-20. Add Release/phase boundary warnings and phase-overlap warnings.
-21. Add actual dates and schedule variance.
-22. Add one read-only testing slice from ALM data.
+16. **Complete:** Application Configuration Layer v1 with centralized environment, API resolution, feature flags, and readonly configuration.
+17. Validate ServiceNow connectivity and authentication behavior on the USPS work computer.
+18. Validate full R29 and an additional release: Story and Defect statuses, teams, owners, missing fields, duplicates, asset conventions, and anomalies.
+19. Investigate governed Request-to-Release mapping using Planning Level without assuming release-like values are sufficient identity.
+20. Determine Request-to-Epic relationships and Story/Defect-to-RAID and Story-to-Feature relationship rules without assuming unverified fields.
+21. Add Release/phase boundary warnings and phase-overlap warnings.
+22. Add actual dates and schedule variance.
+23. Add one read-only testing slice from ALM data.
 
 ## Platform foundations to validate
+
+- Add GitHub Pages deployment support.
+- Implement environment-specific API routing after deployment targets are confirmed.
+- Run a localhost API routing experiment without changing integration contracts.
+- Define and implement the approved enterprise deployment model.
 
 - Determine the approved production authentication architecture
 - Parse VersionOne XML, define the normalized Story contract, add paging, and validate a release parameter

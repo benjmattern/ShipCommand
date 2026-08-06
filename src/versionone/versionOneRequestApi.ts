@@ -1,4 +1,5 @@
 import type { VersionOneRequest, VersionOneRequestsResponse } from './versionOneRequestTypes';
+import { getApiUrl } from '../config';
 
 function nullableString(value: unknown): value is string | null {
   return value === null || typeof value === 'string';
@@ -31,7 +32,7 @@ function isRequestsResponse(value: unknown): value is VersionOneRequestsResponse
 }
 
 export async function loadVersionOneRequests(request: typeof fetch = fetch): Promise<VersionOneRequestsResponse> {
-  const response = await request('/api/versionone/requests', {
+  const response = await request(getApiUrl('/api/versionone/requests'), {
     method: 'GET',
     headers: { Accept: 'application/json' },
   });

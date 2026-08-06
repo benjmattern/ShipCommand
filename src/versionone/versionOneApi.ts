@@ -1,5 +1,6 @@
 import type { VersionOneStoriesError, VersionOneStoriesResponse } from './versionOneTypes';
 import { DEFAULT_VERSIONONE_RELEASE } from './versionOneRelease';
+import { getApiUrl } from '../config';
 
 export const versionOneInspectionRelease = DEFAULT_VERSIONONE_RELEASE;
 
@@ -27,7 +28,7 @@ export async function loadVersionOneStories(
   request: typeof fetch = fetch,
 ): Promise<VersionOneStoriesResponse> {
   const params = new URLSearchParams({ release });
-  const path = `/api/versionone/stories?${params.toString()}`;
+  const path = `${getApiUrl('/api/versionone/stories')}?${params.toString()}`;
   const response = await request(path, {
     method: 'GET',
     headers: { Accept: 'application/json' },
