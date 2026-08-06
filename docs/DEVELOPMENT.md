@@ -18,6 +18,19 @@ npm run build
 
 `npm run build` runs TypeScript compilation and produces the static `dist/` directory.
 
+### GitHub Pages build
+
+Use the dedicated mode when validating the public static deployment:
+
+```text
+npm ci
+npm run build:pages
+```
+
+This runs TypeScript compilation and builds `dist/` with the `/ShipCommand/` Vite base. The generated `index.html` references `/ShipCommand/assets/...`; it does not reference the source entry point. GitHub Actions runs this command and publishes only `dist/`. Do not copy a Pages-mode build into `demo/`.
+
+Pushes to `main` and manual workflow runs trigger `.github/workflows/deploy-pages.yml`. After the workflow is committed and pushed, configure Repository Settings → Pages → Build and deployment → Source to **GitHub Actions**. Branch-root publishing must be disabled because GitHub Pages cannot compile the repository's Vite source `index.html`.
+
 To create the committed static build used by the work computer:
 
 ```text
@@ -50,7 +63,10 @@ For Story Explorer validation, open VersionOne, load the fixed R29 dataset, and 
 
 ## Validation expectations
 
+The work computer does not need npm to use GitHub Pages. It may open `https://benjmattern.github.io/ShipCommand/` directly for workbook-backed and client-side features. Live VersionOne and ServiceNow access still requires the separate localhost Python mode.
+
 - Run `npm run build` after implementation changes.
+- Run `npm run build:pages` and inspect `dist/index.html` when changing static deployment behavior.
 - Exercise workbook loading and affected CRUD or release flows.
 - Validate pure selectors with focused data cases for nontrivial rollups or sorting.
 - Preserve the unrelated root `backlog.md`.
@@ -58,7 +74,7 @@ For Story Explorer validation, open VersionOne, load the fixed R29 dataset, and 
 
 ## Current warnings
 
-Vite reports a non-failing bundle-size warning because XLSX is included in the browser bundle. There is no production deployment or optimization target yet.
+Vite reports a non-failing bundle-size warning because XLSX is included in the browser bundle. GitHub Pages is a static deployment target, not a production enterprise integration host.
 
 ## Local-first constraints
 

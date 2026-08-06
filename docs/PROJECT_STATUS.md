@@ -32,6 +32,7 @@ ShipCommand is the foundation of a Release Operations Platform and unified relea
 - VersionOne Request Explorer v1: fixed `Data/Request` retrieval, complete paging, normalized Request JSON, independent top-level read-only explorer, filters, sorting, and details
 - VersionOne Request Planning Level and Views v1: `Scope.Name` normalization, Planning Level and Asset State controls, Active Intake default, and all-active/release-assigned/all-accessible views
 - Application Configuration Layer v1: centralized environment vocabulary, same-origin API resolution, enabled feature flags, and readonly application configuration with no visible behavior change
+- GitHub Pages Deployment v1: dedicated `/ShipCommand/` build mode, official Actions deployment of `dist/`, static environment detection, and graceful enterprise-unavailable behavior
 - Release Workspace Foundation v1: Release-centered workspace, sticky context header, reusable collapsible panels, and preserved Planning and Phase Progress experiences
 - ServiceNow Connectivity Spike v1: locally configured read-only diagnostic endpoint, controlled PowerShell request, sanitized authentication/response classification, and Diagnostics card
 - Release Identity v1: normalized first-class Release model, lightweight ReleaseStore, Release-backed workspace summaries, and session-only TSLC Project identity editing
@@ -46,7 +47,9 @@ VersionOne connectivity through controlled PowerShell default credentials is pro
 
 The Request Explorer is read-only and session-only; it does not replace or synchronize with the first-class RAID backlog. Release-like Planning Levels may later support Request-to-Release investigation, but no mapping is implemented. Request-to-Epic relationships also remain under investigation.
 
-Application configuration is now isolated in plain TypeScript modules. The current environment remains `development`, the API base remains empty, and all existing features remain enabled. GitHub Pages support, environment-specific API routing, localhost API experiments, and enterprise deployment remain future increments.
+Application configuration is now isolated in plain TypeScript modules. Normal builds remain `development`, use the empty same-origin API base, and keep all existing features enabled. The dedicated GitHub Pages build resolves to `github-pages`, blocks enterprise API resolution, and retains static/client-side capabilities.
+
+GitHub Pages static deployment is implemented in code but requires the repository Pages Source to be changed to **GitHub Actions after this implementation is committed and pushed**. Live enterprise integration from Pages is deferred; the localhost Python application remains the supported VersionOne and ServiceNow path.
 
 Release is now the primary UI context. Selecting one from the Releases overview opens its Release Workspace. Overview, Release Planning, and Phase Progress are initially expanded; VersionOne, ServiceNow, ALM, and RAID are compact collapsed panels. ServiceNow, ALM, and Release-level RAID linkage remain placeholders rather than claimed integrations.
 

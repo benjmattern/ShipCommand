@@ -33,6 +33,14 @@ The React application now separates environment configuration from UI and enterp
 
 Feature helpers for enterprise integrations, VersionOne, ServiceNow, ALM, and Diagnostics currently return true, so navigation and behavior are unchanged. They establish a future deployment-mode seam only; GitHub Pages routing, environment-specific API hosts, localhost experiments, and enterprise deployment are not implemented by this increment.
 
+## GitHub Pages static deployment v1
+
+GitHub Actions builds ShipCommand with Vite's `github-pages` mode and publishes only `dist/` to `https://benjmattern.github.io/ShipCommand/`. That build uses `/ShipCommand/` as its asset base. Ordinary builds keep `/`, and `scripts/build-demo.ps1` continues copying an ordinary build into the tracked `demo/` directory for the Python server.
+
+GitHub Pages hosts static React, generated assets, and the workbook only. It does not host the Python Local Integration API. In Pages mode the centralized environment is `github-pages`, the API base is unavailable, and enterprise feature capabilities are false. Enterprise navigation remains understandable, but selecting those views renders a static explanation instead of mounting API-dependent components; centralized API resolution also throws before `fetch` as defense in depth.
+
+The local development and Python enterprise path remain unchanged. GitHub Pages-to-localhost requests, CORS, OPTIONS support, local HTTPS, mixed-content handling, and a hosted enterprise backend are separate future investigations.
+
 ## Local Integration API — VersionOne Connectivity v1
 
 The direct-browser VersionOne spike failed on the USPS work computer with `TypeError: Failed to fetch` and no readable HTTP response. Direct navigation still returned XML, proving browser-session and network access but not JavaScript cross-origin access.

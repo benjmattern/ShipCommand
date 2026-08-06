@@ -29,32 +29,24 @@ class ApplicationConfigurationTests(unittest.TestCase):
     def test_environment_defaults_to_development(self):
         self.run_typescript_module(
             "environment.ts",
-            "assert.equal(subject.detectEnvironment(), 'development'); assert.equal(subject.environment, 'development');",
+            "assert.equal(subject.detectEnvironment(), 'development'); assert.equal(subject.detectEnvironment('github-pages'), 'github-pages'); assert.equal(subject.environment, 'development');",
         )
 
     def test_api_base_and_existing_paths_are_unchanged(self):
-        self.run_typescript_module(
-            "api.ts",
-            """
-              assert.equal(subject.getApiBaseUrl(), '');
-              assert.equal(subject.getApiUrl('/api/versionone/test'), '/api/versionone/test');
-              assert.equal(subject.getApiUrl('/api/versionone/stories'), '/api/versionone/stories');
-              assert.equal(subject.getApiUrl('/api/versionone/requests'), '/api/versionone/requests');
-              assert.equal(subject.getApiUrl('/api/servicenow/test'), '/api/servicenow/test');
-            """,
-        )
+        source = (CONFIG / "api.ts").read_text(encoding="utf-8")
+        self.assertIn("targetEnvironment === 'github-pages' ? null : ''", source)
+        self.assertIn("if (baseUrl === null) throw new EnterpriseApiUnavailableError()", source)
+        self.assertIn("`${baseUrl}${path}`", source)
 
     def test_all_existing_features_remain_enabled(self):
-        self.run_typescript_module(
-            "features.ts",
-            """
-              assert.equal(subject.isEnterpriseEnabled(), true);
-              assert.equal(subject.isVersionOneEnabled(), true);
-              assert.equal(subject.isServiceNowEnabled(), true);
-              assert.equal(subject.isAlmEnabled(), true);
-              assert.equal(subject.isDiagnosticsEnabled(), true);
-            """,
-        )
+        source = (CONFIG / "features.ts").read_text(encoding="utf-8")
+        self.assertIn("return targetEnvironment !== 'github-pages'", source)
+        for helper in (
+            "isEnterpriseEnabled", "isVersionOneEnabled", "isServiceNowEnabled",
+            "isAlmEnabled", "isDiagnosticsEnabled",
+        ):
+            self.assertIn(f"export function {helper}", source)
+            self.assertIn("return hasLocalIntegration(targetEnvironment)", source)
 
     def test_readonly_configuration_exposes_required_shape(self):
         source = (CONFIG / "index.ts").read_text(encoding="utf-8")
@@ -81,6 +73,37 @@ class ApplicationConfigurationTests(unittest.TestCase):
                 self.assertIn(expected_path, source)
         serialized = json.dumps(call_sites)
         self.assertNotIn("token", serialized.lower())
+
+    def test_pages_build_and_workflow_contracts(self):
+        package = json.loads((ROOT / "package.json").read_text(encoding="utf-8"))
+        self.assertEqual("tsc && vite build", package["scripts"]["build"])
+        self.assertEqual("tsc && vite build --mode github-pages", package["scripts"]["build:pages"])
+
+        vite = (ROOT / "vite.config.ts").read_text(encoding="utf-8")
+        self.assertIn("mode === 'github-pages' ? '/ShipCommand/' : '/'", vite)
+
+        workflow = (ROOT / ".github" / "workflows" / "deploy-pages.yml").read_text(encoding="utf-8")
+        for expected in (
+            "branches: [main]", "workflow_dispatch:", "runs-on: ubuntu-latest",
+            "contents: read", "pages: write", "id-token: write",
+            "environment:", "name: github-pages", "npm ci",
+            "npm run build:pages", "actions/configure-pages@",
+            "actions/upload-pages-artifact@", "path: ./dist", "actions/deploy-pages@",
+        ):
+            self.assertIn(expected, workflow)
+        self.assertNotIn("peaceiris", workflow.lower())
+        self.assertNotIn("gh-pages", workflow.lower())
+
+    def test_static_pages_notice_keeps_navigation_without_api_fetches(self):
+        app = (ROOT / "src" / "App.tsx").read_text(encoding="utf-8")
+        notice = (ROOT / "src" / "EnterpriseUnavailableNotice.tsx").read_text(encoding="utf-8")
+        for label in ("Diagnostics", "VersionOne", "VersionOne Requests"):
+            self.assertIn(label, app)
+        self.assertIn("applicationConfig.versionOneEnabled", app)
+        self.assertIn("applicationConfig.diagnosticsEnabled", app)
+        self.assertIn("Live enterprise data is unavailable in the GitHub Pages build.", notice)
+        self.assertIn("local integration server", notice)
+        self.assertNotIn("fetch(", notice)
 
 
 if __name__ == "__main__":

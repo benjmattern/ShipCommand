@@ -24,6 +24,7 @@ The React POC uses local component state and CSS. `App.tsx` owns the RAID array 
 - No router or state library is justified by current scope.
 - Diagnostic status and sanitized result metadata remain session-only in the VersionOne card.
 - UI components consume centralized readonly feature configuration and no longer directly assume where enterprise API routes are hosted. All current flags remain enabled, so navigation and rendering are unchanged.
+- In the static GitHub Pages build, enterprise navigation remains visible but opens a restrained explanation that live data requires the local integration server. API-dependent pages are not mounted and make no requests. RAID, Releases, Release Workspace, Planning, Phase Progress, workbook loading, sorting, and filtering remain available.
 
 ## Enterprise connectivity diagnostics
 
@@ -62,6 +63,8 @@ The Workspace header, Overview, VersionOne summary, RAID count, and ALM placehol
 ## Accessibility and responsiveness
 
 Interactive overview rows and phase summaries use native buttons, visible focus states, text labels, and accessible names. Layouts wrap or stack on narrower screens. Color supplements rather than replaces status text.
+
+GitHub Pages does not change client navigation. `App.tsx` continues switching views through React state without React Router, so the application root can refresh without a server-side SPA fallback or speculative `404.html`.
 
 ## Phase progress modes
 

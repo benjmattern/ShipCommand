@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "build:pages": "tsc && vite build --mode github-pages",
     "demo:build": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/build-demo.ps1",
     "preview": "vite preview"
   },

@@ -15,6 +15,7 @@ import { VersionOneStoriesPage } from './versionone/VersionOneStoriesPage';
 import { VersionOneRequestsPage } from './versionone/VersionOneRequestsPage';
 import { useReleaseStore } from './releases/ReleaseStore';
 import { applicationConfig } from './config';
+import { EnterpriseUnavailableNotice } from './EnterpriseUnavailableNotice';
 
 type ModalState =
   | { mode: 'view'; record: DataRecord }
@@ -152,9 +153,9 @@ function App() {
         <nav aria-label="Primary navigation">
           <button className={`nav-item ${activeView === 'raid' ? 'active' : ''}`} type="button" onClick={() => setActiveView('raid')}>▦ <span>RAID dashboard</span></button>
           <button className={`nav-item ${activeView === 'releases' ? 'active' : ''}`} type="button" onClick={() => setActiveView('releases')}>□ <span>Releases</span></button>
-          {applicationConfig.diagnosticsEnabled && <button className={`nav-item ${activeView === 'diagnostics' ? 'active' : ''}`} type="button" onClick={() => setActiveView('diagnostics')}>○ <span>Diagnostics</span></button>}
-          {applicationConfig.versionOneEnabled && <button className={`nav-item ${activeView === 'versionone' ? 'active' : ''}`} type="button" onClick={() => setActiveView('versionone')}>◇ <span>VersionOne</span></button>}
-          {applicationConfig.versionOneEnabled && <button className={`nav-item ${activeView === 'versionone-requests' ? 'active' : ''}`} type="button" onClick={() => setActiveView('versionone-requests')}>⌕ <span>VersionOne Requests</span></button>}
+          <button className={`nav-item ${activeView === 'diagnostics' ? 'active' : ''}`} type="button" onClick={() => setActiveView('diagnostics')}>○ <span>Diagnostics</span></button>
+          <button className={`nav-item ${activeView === 'versionone' ? 'active' : ''}`} type="button" onClick={() => setActiveView('versionone')}>◇ <span>VersionOne</span></button>
+          <button className={`nav-item ${activeView === 'versionone-requests' ? 'active' : ''}`} type="button" onClick={() => setActiveView('versionone-requests')}>⌕ <span>VersionOne Requests</span></button>
           <button className="nav-item" type="button" disabled>✓ <span>Approvals</span></button>
           <button className="nav-item" type="button" disabled>⚙ <span>Settings</span></button>
         </nav>
@@ -265,11 +266,11 @@ function App() {
             }}
           />
         ) : activeView === 'diagnostics' ? (
-          <DiagnosticsPage />
+          applicationConfig.diagnosticsEnabled ? <DiagnosticsPage /> : <EnterpriseUnavailableNotice />
         ) : activeView === 'versionone-requests' ? (
-          <VersionOneRequestsPage />
+          applicationConfig.versionOneEnabled ? <VersionOneRequestsPage /> : <EnterpriseUnavailableNotice />
         ) : (
-          <VersionOneStoriesPage />
+          applicationConfig.versionOneEnabled ? <VersionOneStoriesPage /> : <EnterpriseUnavailableNotice />
         )}
       </main>
 

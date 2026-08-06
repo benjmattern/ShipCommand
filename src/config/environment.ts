@@ -3,11 +3,11 @@ export type Environment = 'development' | 'enterprise' | 'github-pages';
 /**
  * Central environment detection boundary.
  *
- * Deployment-specific signals are intentionally deferred. Until a deployment
- * increment supplies an approved signal, every build retains today's behavior.
+ * Vite supplies the mode at build time. Normal builds retain development
+ * behavior; the dedicated Pages build selects the static environment.
  */
-export function detectEnvironment(): Environment {
-  return 'development';
+export function detectEnvironment(mode: string = import.meta.env?.MODE ?? 'development'): Environment {
+  return mode === 'github-pages' ? 'github-pages' : 'development';
 }
 
 export const environment: Environment = detectEnvironment();

@@ -8,7 +8,7 @@ import {
   isVersionOneEnabled,
 } from './features';
 
-export { getApiBaseUrl, getApiUrl } from './api';
+export { EnterpriseApiUnavailableError, getApiBaseUrl, getApiUrl, versionOneDisplayEndpoint } from './api';
 export { detectEnvironment, environment, type Environment } from './environment';
 export {
   isAlmEnabled,

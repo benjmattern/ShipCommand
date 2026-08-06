@@ -96,6 +96,10 @@
 - The supported environment vocabulary is `development`, `enterprise`, and `github-pages`, with detection intentionally resolving to `development` until a deployment increment supplies an approved signal.
 - The API base remains empty and all current feature flags remain true, preserving same-origin `/api/...` behavior and visible navigation. Future targets include local development, GitHub Pages, and the USPS intranet without changing UI or integration component code.
 - Configuration is compile-time TypeScript only. Environment variables, runtime editing, browser storage, Context, dependency injection, and configuration packages remain unjustified.
+- GitHub Pages publishes the generated `dist/` directory through the official GitHub Actions Pages workflow; repository-root branch publishing is not used for the Vite application.
+- The Pages Vite base is `/ShipCommand/`. Normal builds keep their existing `/` base and the tracked `demo/` workflow remains supported for the local Python server.
+- GitHub Pages mode is static-only: workbook-backed and client-side features remain enabled, while live VersionOne, ServiceNow, ALM, and Diagnostics capabilities are disabled with explanatory UI.
+- GitHub Pages-to-localhost integration is deferred to a separate feasibility spike covering CORS, mixed content, HTTPS, and network policy. No localhost URL is embedded in the Pages build.
 - Request identity prefers OID, then href, then Request Number. Missing source values remain null, and duplicate stable identities retain the first normalized record.
 - Request-to-Epic relationships remain unverified and are deferred; the explorer does not infer or navigate relationships.
 

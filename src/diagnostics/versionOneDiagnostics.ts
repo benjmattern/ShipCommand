@@ -1,7 +1,7 @@
 import type { ConnectionTestResult } from './diagnosticTypes';
-import { getApiUrl } from '../config';
+import { getApiUrl, versionOneDisplayEndpoint } from '../config';
 
-export const versionOneStoryEndpoint = 'https://versionone.usps.gov/v1/rest-1.v1/Data/Story';
+export const versionOneStoryEndpoint = versionOneDisplayEndpoint ?? 'Unavailable in this build';
 export const versionOneDiagnosticRelease = '29.0.0.0';
 export const versionOneDiagnosticApiPath = getApiUrl('/api/versionone/test');
 
