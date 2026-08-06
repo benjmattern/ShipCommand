@@ -74,6 +74,34 @@ class ApplicationConfigurationTests(unittest.TestCase):
         serialized = json.dumps(call_sites)
         self.assertNotIn("token", serialized.lower())
 
+    def test_api_resolution_only_occurs_when_enterprise_requests_run(self):
+        request_modules = {
+            "src/versionone/versionOneApi.ts": "export async function loadVersionOneStories",
+            "src/versionone/versionOneRequestApi.ts": "export async function loadVersionOneRequests",
+            "src/diagnostics/versionOneDiagnostics.ts": "export async function runVersionOneConnectionTest",
+            "src/diagnostics/serviceNowDiagnostics.ts": "export async function runServiceNowConnectionTest",
+        }
+        for relative_path, request_function in request_modules.items():
+            with self.subTest(relative_path=relative_path):
+                source = (ROOT / relative_path).read_text(encoding="utf-8")
+                function_start = source.index(request_function)
+                self.assertNotIn("getApiUrl(", source[:function_start])
+                self.assertIn("getApiUrl(", source[function_start:])
+
+        api_source = (CONFIG / "api.ts").read_text(encoding="utf-8")
+        self.assertNotIn("getApiUrl(", api_source[:api_source.index("export function getApiUrl")])
+        self.assertIn("throw new EnterpriseApiUnavailableError()", api_source)
+
+    def test_pages_startup_configuration_is_non_throwing(self):
+        index_source = (CONFIG / "index.ts").read_text(encoding="utf-8")
+        config_initializer = index_source[index_source.index("export const applicationConfig"):]
+        self.assertNotIn("getApiUrl(", config_initializer)
+        self.assertIn("apiBaseUrl: getApiBaseUrl()", config_initializer)
+
+        api_source = (CONFIG / "api.ts").read_text(encoding="utf-8")
+        self.assertIn("targetEnvironment === 'github-pages' ? null : ''", api_source)
+        self.assertIn("if (baseUrl === null) throw new EnterpriseApiUnavailableError()", api_source)
+
     def test_pages_build_and_workflow_contracts(self):
         package = json.loads((ROOT / "package.json").read_text(encoding="utf-8"))
         self.assertEqual("tsc && vite build", package["scripts"]["build"])

@@ -3,7 +3,7 @@ import { getApiUrl, versionOneDisplayEndpoint } from '../config';
 
 export const versionOneStoryEndpoint = versionOneDisplayEndpoint ?? 'Unavailable in this build';
 export const versionOneDiagnosticRelease = '29.0.0.0';
-export const versionOneDiagnosticApiPath = getApiUrl('/api/versionone/test');
+export const versionOneDiagnosticApiPath = '/api/versionone/test';
 
 type DiagnosticFetch = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
 
@@ -26,7 +26,7 @@ export async function runVersionOneConnectionTest(
   const startedAt = performance.now();
 
   try {
-    const response = await request(versionOneDiagnosticApiPath, {
+    const response = await request(getApiUrl(versionOneDiagnosticApiPath), {
       method: 'GET',
       headers: { Accept: 'application/json' },
     });

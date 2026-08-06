@@ -28,7 +28,7 @@ export interface ServiceNowDiagnosticResult {
   message: string;
 }
 
-export const serviceNowDiagnosticApiPath = getApiUrl('/api/servicenow/test');
+export const serviceNowDiagnosticApiPath = '/api/servicenow/test';
 
 function isServiceNowResult(value: unknown): value is ServiceNowDiagnosticResult {
   if (!value || typeof value !== 'object') return false;
@@ -49,7 +49,7 @@ export async function runServiceNowConnectionTest(
   request: typeof fetch = fetch,
 ): Promise<ServiceNowDiagnosticResult> {
   try {
-    const response = await request(serviceNowDiagnosticApiPath, {
+    const response = await request(getApiUrl(serviceNowDiagnosticApiPath), {
       method: 'GET',
       headers: { Accept: 'application/json' },
     });
