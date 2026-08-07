@@ -23,9 +23,12 @@ Do not paste secrets, authentication data, PII, production records, confidential
 
 ## Sharepoint Test
 - https://usps365-my.sharepoint.com/personal/benedict_j_mattern_usps_gov/Lists/Ship%20Issues%20Tracker/Eli%20view.aspx?env=WebViewList
+- git pull
+$env:SHIPCOMMAND_SHAREPOINT_TEST_URL = "<your SharePoint list URL>"
+python .\scripts\serve-shipcommand.py
 
 
 git add knowledge
-git commit -m "Sharepoint List Test"
+git commit -m "Sharepoint List Test Spike"
 git push
   
