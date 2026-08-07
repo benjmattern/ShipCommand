@@ -65,6 +65,7 @@ class ApplicationConfigurationTests(unittest.TestCase):
             "src/versionone/versionOneRequestApi.ts": "/api/versionone/requests",
             "src/diagnostics/versionOneDiagnostics.ts": "/api/versionone/test",
             "src/diagnostics/serviceNowDiagnostics.ts": "/api/servicenow/test",
+            "src/diagnostics/sharePointDiagnostics.ts": "/api/sharepoint/test",
         }
         for relative_path, expected_path in call_sites.items():
             with self.subTest(relative_path=relative_path):
@@ -80,6 +81,7 @@ class ApplicationConfigurationTests(unittest.TestCase):
             "src/versionone/versionOneRequestApi.ts": "export async function loadVersionOneRequests",
             "src/diagnostics/versionOneDiagnostics.ts": "export async function runVersionOneConnectionTest",
             "src/diagnostics/serviceNowDiagnostics.ts": "export async function runServiceNowConnectionTest",
+            "src/diagnostics/sharePointDiagnostics.ts": "export async function runSharePointConnectionTest",
         }
         for relative_path, request_function in request_modules.items():
             with self.subTest(relative_path=relative_path):

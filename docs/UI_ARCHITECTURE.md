@@ -66,6 +66,8 @@ Interactive overview rows and phase summaries use native buttons, visible focus 
 
 GitHub Pages does not change client navigation. `App.tsx` continues switching views through React state without React Router, so the application root can refresh without a server-side SPA fallback or speculative `404.html`.
 
+Local Diagnostics includes a third manually triggered SharePoint card alongside VersionOne and ServiceNow. It displays only configuration status and sanitized connectivity classifications; it never displays or accepts the configured URL, response content, headers, cookies, tokens, or redirect destination. GitHub Pages continues using the existing enterprise-unavailable page, so it neither mounts the card nor initiates localhost or Microsoft 365 access.
+
 ## Phase progress modes
 
 Phase-progress rendering consults the shared controlled phase definition. Percentage phases retain numeric percent displays and inputs. CAT Ready uses explicit `Ready` or `Not ready` text in RAID detail and Release phase views, and its existing service phase-progress editor replaces the percent input with a labeled, keyboard-accessible checkbox. The numeric compatibility value remains hidden from users.

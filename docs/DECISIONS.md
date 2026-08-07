@@ -102,6 +102,9 @@
 - GitHub Pages-to-localhost integration is deferred to a separate feasibility spike covering CORS, mixed content, HTTPS, and network policy. No localhost URL is embedded in the Pages build.
 - Request identity prefers OID, then href, then Request Number. Missing source values remain null, and duplicate stable identities retain the first normalized record.
 - Request-to-Epic relationships remain unverified and are deferred; the explorer does not infer or navigate relationships.
+- SharePoint connectivity uses the established React → Local Integration API → fixed PowerShell helper boundary. The test URL is local environment configuration, accepts HTTPS only, and is never accepted from or returned to the browser.
+- The SharePoint spike is read-only authentication/access classification. It does not retrieve list items, persist data, synchronize ShipCommand records, implement OAuth or Graph, or select a persistence architecture.
+- The candidate list is on a personal Microsoft 365 SharePoint site. It may support experimentation, but multi-user access, ownership, governance, and suitability as shared persistence remain unresolved.
 
 ## Current UI
 

@@ -35,6 +35,7 @@ ShipCommand is the foundation of a Release Operations Platform and unified relea
 - GitHub Pages Deployment v1: dedicated `/ShipCommand/` build mode, official Actions deployment of `dist/`, static environment detection, and graceful enterprise-unavailable behavior
 - Release Workspace Foundation v1: Release-centered workspace, sticky context header, reusable collapsible panels, and preserved Planning and Phase Progress experiences
 - ServiceNow Connectivity Spike v1: locally configured read-only diagnostic endpoint, controlled PowerShell request, sanitized authentication/response classification, and Diagnostics card
+- SharePoint Connectivity Spike v1: locally configured read-only diagnostic endpoint, controlled PowerShell request, sanitized authentication/response classification, and Diagnostics card
 - Release Identity v1: normalized first-class Release model, lightweight ReleaseStore, Release-backed workspace summaries, and session-only TSLC Project identity editing
 
 Seeded Releases show non-authoritative sample planning dates separately from the RAID workbook. Schedule CRUD is available for the current session; refresh restores seed values. Permanent persistence and planning-warning rules remain open.
@@ -54,6 +55,8 @@ GitHub Pages static deployment is implemented in code but requires the repositor
 Release is now the primary UI context. Selecting one from the Releases overview opens its Release Workspace. Overview, Release Planning, and Phase Progress are initially expanded; VersionOne, ServiceNow, ALM, and RAID are compact collapsed panels. ServiceNow, ALM, and Release-level RAID linkage remain placeholders rather than claimed integrations.
 
 ServiceNow connectivity architecture is implemented but not yet classified on the USPS work computer. Missing local configuration is handled safely. No TSLC table lookup, OAuth flow, synchronization, report parsing, or persistence exists. The live result will determine whether direct REST, Windows integrated authentication, another approved authentication mechanism, or report ingestion is appropriate.
+
+SharePoint connectivity architecture is implemented but not yet classified on the USPS work computer. The candidate **Ship Issues Tracker** list is hosted on a personal USPS Microsoft 365 SharePoint site. The spike tests only whether a locally configured URL is reachable with Windows default credentials and returns sanitized response metadata. It does not retrieve list items or establish SharePoint as ShipCommand persistence; authentication, shared-user access, ownership, and governance remain unproven.
 
 Release identity now comes from a shared model derived from locally known RAID assignments. ReleaseStore owns selection and optional metadata for the current browser session. Workspace placeholders read those fields directly. TSLC Project values may be validated and saved locally, but enterprise identifiers, Story/Defect counts, health, refresh timestamps, and ALM mappings remain undefined until authoritative integrations populate them.
 

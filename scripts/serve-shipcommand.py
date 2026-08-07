@@ -35,10 +35,12 @@ REPOSITORY_ROOT = Path(__file__).resolve().parent.parent
 DEMO_DIRECTORY = REPOSITORY_ROOT / "demo"
 VERSIONONE_HELPER = Path(__file__).resolve().parent / "test-versionone-connection.ps1"
 SERVICENOW_HELPER = Path(__file__).resolve().parent / "test-servicenow-connection.ps1"
+SHAREPOINT_HELPER = Path(__file__).resolve().parent / "test-sharepoint-connection.ps1"
 LOCAL_API_PATH = "/api/versionone/test"
 STORIES_API_PATH = "/api/versionone/stories"
 REQUESTS_API_PATH = "/api/versionone/requests"
 SERVICENOW_API_PATH = "/api/servicenow/test"
+SHAREPOINT_API_PATH = "/api/sharepoint/test"
 SUBPROCESS_TIMEOUT_SECONDS = 35
 
 
@@ -451,12 +453,142 @@ def run_servicenow_diagnostic(
     return 200, classify_servicenow_result(payload, duration_ms)
 
 
+def sharepoint_result(
+    *, ok: bool, configured: bool, duration_ms: int, upstream_status: int | None,
+    content_type: str | None, response_kind: str, authentication_outcome: str,
+    redirect_detected: bool, login_page_detected: bool, sharepoint_detected: bool,
+    message: str,
+) -> dict[str, Any]:
+    return {
+        "ok": ok, "configured": configured, "system": "sharepoint",
+        "durationMs": duration_ms, "upstreamStatus": upstream_status,
+        "contentType": content_type, "responseKind": response_kind,
+        "authenticationOutcome": authentication_outcome,
+        "redirectDetected": redirect_detected, "loginPageDetected": login_page_detected,
+        "sharePointDetected": sharepoint_detected, "message": message,
+    }
+
+
+def get_sharepoint_request_url(environ: dict[str, str] | os._Environ[str] = os.environ) -> str | None:
+    request_url = environ.get("SHIPCOMMAND_SHAREPOINT_TEST_URL", "").strip()
+    if not request_url:
+        return None
+    if len(request_url) > 2048 or any(ord(character) < 32 for character in request_url):
+        raise ValueError("Invalid SharePoint configuration.")
+    parsed = urlsplit(request_url)
+    query_keys = {key.casefold() for key in parse_qs(parsed.query, keep_blank_values=True)}
+    if (
+        parsed.scheme.lower() != "https" or not parsed.netloc or parsed.username or parsed.password
+        or parsed.fragment
+        or any(marker in key for key in query_keys for marker in ("token", "code", "auth", "signature", "credential"))
+    ):
+        raise ValueError("Invalid SharePoint configuration.")
+    return request_url
+
+
+def classify_sharepoint_result(payload: dict[str, Any], fallback_duration_ms: int) -> dict[str, Any]:
+    upstream_status = payload.get("upstreamStatus")
+    if not isinstance(upstream_status, int):
+        upstream_status = None
+    content_type = payload.get("contentType") if isinstance(payload.get("contentType"), str) else None
+    response_kind = payload.get("responseKind")
+    if response_kind not in {"json", "xml", "html", "empty", "unknown"}:
+        response_kind = "unknown"
+    duration_ms = payload.get("durationMs")
+    if not isinstance(duration_ms, int):
+        duration_ms = fallback_duration_ms
+    redirect_detected = bool(payload.get("redirectDetected"))
+    login_page_detected = bool(payload.get("loginPageDetected"))
+    sharepoint_detected = bool(payload.get("sharePointDetected"))
+    error_category = payload.get("errorCategory")
+
+    if upstream_status == 401:
+        outcome, message = "unauthorized", "SharePoint denied access."
+    elif upstream_status == 403:
+        outcome, message = "forbidden", "SharePoint denied access."
+    elif redirect_detected:
+        outcome, message = "redirect", "SharePoint redirected the request to Microsoft 365 sign-in."
+    elif login_page_detected:
+        outcome, message = "login-page", "SharePoint returned a Microsoft 365 sign-in page."
+    elif error_category == "transport":
+        outcome, message = "unreachable", "The local integration API could not reach SharePoint."
+    elif error_category:
+        outcome, message = "upstream-error", "The local integration API could not complete the SharePoint request."
+    elif upstream_status is not None and 200 <= upstream_status < 300 and not login_page_detected:
+        outcome, message = "authenticated-response", "SharePoint returned a readable response."
+    elif upstream_status is not None and upstream_status >= 400:
+        outcome, message = "upstream-error", "SharePoint returned an upstream error."
+    else:
+        outcome, message = "unknown", "SharePoint returned a response that could not be classified."
+
+    return sharepoint_result(
+        ok=outcome == "authenticated-response", configured=True, duration_ms=duration_ms,
+        upstream_status=upstream_status, content_type=content_type, response_kind=response_kind,
+        authentication_outcome=outcome, redirect_detected=redirect_detected,
+        login_page_detected=login_page_detected, sharepoint_detected=sharepoint_detected,
+        message=message,
+    )
+
+
+def run_sharepoint_diagnostic(
+    *, environ: dict[str, str] | os._Environ[str] = os.environ,
+    powershell_executable: str | None = None,
+    run_process: Callable[..., subprocess.CompletedProcess[str]] = subprocess.run,
+) -> tuple[int, dict[str, Any]]:
+    empty = dict(ok=False, configured=False, duration_ms=0, upstream_status=None,
+                 content_type=None, response_kind="unknown", authentication_outcome="not-configured",
+                 redirect_detected=False, login_page_detected=False, sharepoint_detected=False)
+    try:
+        request_url = get_sharepoint_request_url(environ)
+    except ValueError:
+        return 500, sharepoint_result(**empty, message="SharePoint configuration is invalid.")
+    if request_url is None:
+        empty["response_kind"] = "empty"
+        return 200, sharepoint_result(**empty, message="SharePoint is not configured.")
+
+    executable = powershell_executable or find_powershell()
+    if not executable:
+        empty.update(configured=True, authentication_outcome="unreachable")
+        return 500, sharepoint_result(**empty, message="The local integration API could not start the SharePoint connectivity test.")
+
+    started_at = time.monotonic()
+    command = [executable, "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass",
+               "-File", str(SHAREPOINT_HELPER), "-RequestUrl", request_url]
+    try:
+        completed = run_process(
+            command, shell=False, capture_output=True, text=True, encoding="utf-8",
+            errors="replace", timeout=SUBPROCESS_TIMEOUT_SECONDS, check=False,
+        )
+    except subprocess.TimeoutExpired:
+        empty.update(configured=True, duration_ms=round((time.monotonic() - started_at) * 1000),
+                     authentication_outcome="timeout")
+        return 504, sharepoint_result(**empty, message="The SharePoint request exceeded the local integration timeout.")
+    except OSError:
+        empty.update(configured=True, duration_ms=round((time.monotonic() - started_at) * 1000),
+                     authentication_outcome="unreachable")
+        return 500, sharepoint_result(**empty, message="The local integration API could not start the SharePoint connectivity test.")
+
+    duration_ms = round((time.monotonic() - started_at) * 1000)
+    if completed.returncode != 0:
+        empty.update(configured=True, duration_ms=duration_ms, authentication_outcome="upstream-error")
+        return 502, sharepoint_result(**empty, message="The local integration API could not complete the SharePoint connectivity test.")
+    try:
+        payload = json.loads(completed.stdout.strip())
+        if not isinstance(payload, dict):
+            raise ValueError
+    except (json.JSONDecodeError, ValueError):
+        empty.update(configured=True, duration_ms=duration_ms, authentication_outcome="upstream-error")
+        return 502, sharepoint_result(**empty, message="The local integration API received an invalid SharePoint diagnostic result.")
+    return 200, classify_sharepoint_result(payload, duration_ms)
+
+
 def create_request_handler(
     demo_directory: Path,
     diagnostic: Callable[[], tuple[int, dict[str, Any]]] = run_versionone_diagnostic,
     stories: Callable[[str], dict[str, Any]] = run_versionone_stories,
     requests: Callable[[], dict[str, Any]] = run_versionone_requests,
     servicenow_diagnostic: Callable[[], tuple[int, dict[str, Any]]] = run_servicenow_diagnostic,
+    sharepoint_diagnostic: Callable[[], tuple[int, dict[str, Any]]] = run_sharepoint_diagnostic,
 ) -> type[BaseHTTPRequestHandler]:
     resolved_demo = demo_directory.resolve()
 
@@ -477,6 +609,9 @@ def create_request_handler(
                 return
             if request_path == SERVICENOW_API_PATH:
                 self._serve_servicenow_diagnostic(parsed_request.query)
+                return
+            if request_path == SHAREPOINT_API_PATH:
+                self._serve_sharepoint_diagnostic(parsed_request.query)
                 return
             if request_path.startswith("/api/"):
                 self._send_json(404, {"status": "failed", "message": "Local API route not found."})
@@ -609,6 +744,26 @@ def create_request_handler(
                 )
             self._send_json(local_status, result)
 
+        def _serve_sharepoint_diagnostic(self, query_string: str) -> None:
+            if query_string:
+                self._send_json(400, {
+                    "ok": False, "configured": False, "system": "sharepoint",
+                    "message": "SharePoint diagnostic parameters are not accepted.",
+                })
+                return
+            try:
+                local_status, result = sharepoint_diagnostic()
+            except Exception as error:
+                print(f"SharePoint diagnostic error: {type(error).__name__}", file=sys.stderr)
+                local_status = 500
+                result = sharepoint_result(
+                    ok=False, configured=True, duration_ms=0, upstream_status=None,
+                    content_type=None, response_kind="unknown", authentication_outcome="upstream-error",
+                    redirect_detected=False, login_page_detected=False, sharepoint_detected=False,
+                    message="The local integration API encountered an unexpected SharePoint diagnostic failure.",
+                )
+            self._send_json(local_status, result)
+
         def _serve_static(self, request_path: str) -> None:
             decoded_path = unquote(request_path)
             relative_path = "index.html" if decoded_path == "/" else decoded_path.lstrip("/")
@@ -656,12 +811,15 @@ def create_server(
     stories: Callable[[str], dict[str, Any]] = run_versionone_stories,
     requests: Callable[[], dict[str, Any]] = run_versionone_requests,
     servicenow_diagnostic: Callable[[], tuple[int, dict[str, Any]]] = run_servicenow_diagnostic,
+    sharepoint_diagnostic: Callable[[], tuple[int, dict[str, Any]]] = run_sharepoint_diagnostic,
 ) -> ThreadingHTTPServer:
     if not (demo_directory / "index.html").is_file():
         raise FileNotFoundError(f"ShipCommand demo build was not found: {demo_directory}")
     return ThreadingHTTPServer((
         host, port
-    ), create_request_handler(demo_directory, diagnostic, stories, requests, servicenow_diagnostic))
+    ), create_request_handler(
+        demo_directory, diagnostic, stories, requests, servicenow_diagnostic, sharepoint_diagnostic,
+    ))
 
 
 def parse_arguments() -> argparse.Namespace:
@@ -691,6 +849,7 @@ def main() -> int:
     print(f"GET {STORIES_API_PATH}")
     print(f"GET {REQUESTS_API_PATH}")
     print(f"GET {SERVICENOW_API_PATH}")
+    print(f"GET {SHAREPOINT_API_PATH}")
     print()
     print("Press Ctrl+C to stop.")
 

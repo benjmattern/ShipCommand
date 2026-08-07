@@ -162,4 +162,10 @@ Connectors own authentication, transport, querying, source-specific schemas, and
 - Which fields, if any, should ShipCommand eventually write back?
 - What deployment and support model is appropriate?
 
+## SharePoint connectivity spike
+
+SharePoint follows the existing React Diagnostics → Python Local Integration API → controlled PowerShell subprocess boundary. `GET /api/sharepoint/test` performs an explicit, read-only connectivity test against the locally configured `SHIPCOMMAND_SHAREPOINT_TEST_URL`; the browser cannot provide or receive that URL. The subprocess uses Windows default credentials only to classify the response and returns sanitized metadata rather than content, headers, cookies, tokens, or redirect destinations.
+
+The candidate **Ship Issues Tracker** list is on a personal USPS Microsoft 365 SharePoint site. That is suitable for connectivity experimentation and possibly a personal POC, but shared-user access, ownership, and governance must be validated separately. Authentication remains unproven, and no persistence architecture, list schema, synchronization, Graph API, OAuth flow, or write capability has been selected. GitHub Pages does not mount Diagnostics or attempt SharePoint access.
+
 See [System Boundaries](SYSTEM_BOUNDARIES.md), [Data Integrations](DATA_INTEGRATIONS.md), and [Implementation Architecture](ARCHITECTURE.md).

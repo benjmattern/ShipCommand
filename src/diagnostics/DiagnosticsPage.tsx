@@ -1,5 +1,6 @@
 import { VersionOneDiagnosticCard } from './VersionOneDiagnosticCard';
 import { ServiceNowDiagnosticCard } from './ServiceNowDiagnosticCard';
+import { SharePointDiagnosticCard } from './SharePointDiagnosticCard';
 import { applicationConfig } from '../config';
 
 export function DiagnosticsPage() {
@@ -11,6 +12,7 @@ export function DiagnosticsPage() {
       </div>
       {applicationConfig.versionOneEnabled && <VersionOneDiagnosticCard />}
       {applicationConfig.serviceNowEnabled && <ServiceNowDiagnosticCard />}
+      {applicationConfig.enterpriseEnabled && <SharePointDiagnosticCard />}
     </section>
   );
 }

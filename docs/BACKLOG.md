@@ -21,13 +21,15 @@ This is a directional backlog, not a delivery commitment. Prefer validated verti
 15. **Complete:** VersionOne Request Planning Level and Views v1 with `Scope.Name`, Active Intake, All Active, Release Assigned, and All Accessible client-side views.
 16. **Complete:** Application Configuration Layer v1 with centralized environment, API resolution, feature flags, and readonly configuration.
 17. **Complete:** GitHub Pages build mode, Actions deployment, `/ShipCommand/` Vite base, static environment, and graceful enterprise-unavailable behavior.
-18. Validate ServiceNow connectivity and authentication behavior on the USPS work computer.
-19. Validate full R29 and an additional release: Story and Defect statuses, teams, owners, missing fields, duplicates, asset conventions, and anomalies.
-20. Investigate governed Request-to-Release mapping using Planning Level without assuming release-like values are sufficient identity.
-21. Determine Request-to-Epic relationships and Story/Defect-to-RAID and Story-to-Feature relationship rules without assuming unverified fields.
-22. Add Release/phase boundary warnings and phase-overlap warnings.
-23. Add actual dates and schedule variance.
-24. Add one read-only testing slice from ALM data.
+18. **Complete:** SharePoint Connectivity Spike v1 with local HTTPS configuration, controlled read-only PowerShell test, sanitized classification, and Diagnostics card.
+19. Validate SharePoint connectivity and authentication behavior against the candidate personal-site list on the USPS work computer.
+20. Validate ServiceNow connectivity and authentication behavior on the USPS work computer.
+21. Validate full R29 and an additional release: Story and Defect statuses, teams, owners, missing fields, duplicates, asset conventions, and anomalies.
+22. Investigate governed Request-to-Release mapping using Planning Level without assuming release-like values are sufficient identity.
+23. Determine Request-to-Epic relationships and Story/Defect-to-RAID and Story-to-Feature relationship rules without assuming unverified fields.
+24. Add Release/phase boundary warnings and phase-overlap warnings.
+25. Add actual dates and schedule variance.
+26. Add one read-only testing slice from ALM data.
 
 ## Platform foundations to validate
 
