@@ -6,6 +6,13 @@ import {
   requestFilterOptions,
   sortVersionOneRequests,
 } from './versionOneRequestFilters';
+import {
+  moveVersionOneRequest,
+  orderVersionOneRequests,
+  readVersionOneRequestOrder,
+  reconcileVersionOneRequestOrder,
+  writeVersionOneRequestOrder,
+} from './versionOneRequestOrder';
 import type {
   SortDirection,
   VersionOneRequest,
@@ -18,7 +25,7 @@ const columns: Array<{ field: VersionOneRequestSortField; label: string }> = [
   { field: 'number', label: 'Number' },
   { field: 'name', label: 'Request' },
   { field: 'planningLevelName', label: 'Planning Level' },
-  { field: 'priority', label: 'Priority' },
+  { field: 'priority', label: 'VersionOne Priority' },
   { field: 'status', label: 'Status' },
   { field: 'ownerName', label: 'Owner' },
   { field: 'assetState', label: 'Asset State' },
@@ -27,6 +34,24 @@ const columns: Array<{ field: VersionOneRequestSortField; label: string }> = [
 function display(value: string | null) {
   return value ?? '—';
 }
+
+function initialRequestOrder() {
+  try {
+    return readVersionOneRequestOrder(window.sessionStorage);
+  } catch {
+    return [];
+  }
+}
+
+function persistRequestOrder(order: string[]) {
+  try {
+    writeVersionOneRequestOrder(window.sessionStorage, order);
+  } catch {
+    // The page can still use in-memory ordering if sessionStorage is blocked.
+  }
+}
+
+type RequestTableSortField = VersionOneRequestSortField | 'shipPriority';
 
 export function VersionOneRequestsPage() {
   const [result, setResult] = useState<VersionOneRequestsResponse | null>(null);
@@ -39,8 +64,10 @@ export function VersionOneRequestsPage() {
   const [planningLevelName, setPlanningLevelName] = useState('');
   const [assetState, setAssetState] = useState('');
   const [view, setView] = useState<VersionOneRequestView>('active-intake');
-  const [sortField, setSortField] = useState<VersionOneRequestSortField>('number');
+  const [sortField, setSortField] = useState<RequestTableSortField>('shipPriority');
   const [sortDirection, setSortDirection] = useState<SortDirection>('ascending');
+  const [requestOrder, setRequestOrder] = useState<string[]>(initialRequestOrder);
+  const [draggedId, setDraggedId] = useState<string | null>(null);
   const [selected, setSelected] = useState<VersionOneRequest | null>(null);
   const loadingRef = useRef(false);
 
@@ -50,7 +77,13 @@ export function VersionOneRequestsPage() {
     setLoading(true);
     setError(null);
     try {
-      setResult(await loadVersionOneRequests());
+      const loaded = await loadVersionOneRequests();
+      setResult(loaded);
+      setRequestOrder((current) => {
+        const next = reconcileVersionOneRequestOrder(loaded.requests, current);
+        persistRequestOrder(next);
+        return next;
+      });
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : 'VersionOne requests could not be retrieved.');
     } finally {
@@ -59,7 +92,7 @@ export function VersionOneRequestsPage() {
     }
   }
 
-  function changeSort(field: VersionOneRequestSortField) {
+  function changeSort(field: RequestTableSortField) {
     if (field === sortField) {
       setSortDirection((current) => current === 'ascending' ? 'descending' : 'ascending');
     } else {
@@ -69,6 +102,14 @@ export function VersionOneRequestsPage() {
   }
 
   const requests = result?.requests ?? [];
+  const orderedRequests = useMemo(
+    () => orderVersionOneRequests(requests, requestOrder),
+    [requests, requestOrder],
+  );
+  const shipPriorities = useMemo(
+    () => new Map(requestOrder.map((id, index) => [id, index + 1])),
+    [requestOrder],
+  );
   const statuses = useMemo(() => requestFilterOptions(requests, 'status'), [requests]);
   const priorities = useMemo(() => requestFilterOptions(requests, 'priority'), [requests]);
   const owners = useMemo(() => requestFilterOptions(requests, 'ownerName'), [requests]);
@@ -80,12 +121,24 @@ export function VersionOneRequestsPage() {
     releaseAssigned: requests.filter((request) => matchesRequestView(request, 'release-assigned')).length,
     all: requests.length,
   }), [requests]);
-  const displayedRequests = useMemo(() => sortVersionOneRequests(
-    filterVersionOneRequests(requests, search, status, priority, owner, planningLevelName, assetState, view),
-    sortField,
-    sortDirection,
-  ), [requests, search, status, priority, owner, planningLevelName, assetState, view, sortField, sortDirection]);
   const hasFieldFilters = Boolean(search.trim() || status || priority || owner || planningLevelName || assetState);
+  const displayedRequests = useMemo(() => {
+    const filtered = filterVersionOneRequests(
+      orderedRequests,
+      search,
+      status,
+      priority,
+      owner,
+      planningLevelName,
+      assetState,
+      view,
+    );
+    if (sortField === 'shipPriority') {
+      return sortDirection === 'ascending' ? filtered : [...filtered].reverse();
+    }
+    return sortVersionOneRequests(filtered, sortField, sortDirection);
+  }, [orderedRequests, search, status, priority, owner, planningLevelName, assetState, view, sortField, sortDirection]);
+  const canReorder = !hasFieldFilters && sortField === 'shipPriority' && sortDirection === 'ascending';
   const emptyMessage = hasFieldFilters
     ? 'No Requests match current filters.'
     : view === 'active-intake'
@@ -93,6 +146,16 @@ export function VersionOneRequestsPage() {
       : view === 'release-assigned'
         ? 'No release-assigned Requests found.'
         : 'No Requests match current filters.';
+
+  function reorderRequest(targetId: string) {
+    if (!canReorder || !draggedId || draggedId === targetId) return;
+    setRequestOrder((current) => {
+      const next = moveVersionOneRequest(current, draggedId, targetId);
+      persistRequestOrder(next);
+      return next;
+    });
+    setDraggedId(null);
+  }
 
   return (
     <section className="versionone-page">
@@ -123,23 +186,28 @@ export function VersionOneRequestsPage() {
             <label>View<select value={view} onChange={(event) => setView(event.target.value as VersionOneRequestView)}><option value="active-intake">Active Intake ({viewCounts.activeIntake})</option><option value="all-active">All Active Requests ({viewCounts.allActive})</option><option value="release-assigned">Release Assigned Requests ({viewCounts.releaseAssigned})</option><option value="all">All Accessible Requests ({viewCounts.all})</option></select></label>
             <label>Search<input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Number or Request name" /></label>
             <label>Status<select value={status} onChange={(event) => setStatus(event.target.value)}><option value="">All Statuses</option>{statuses.map((value) => <option key={value}>{value}</option>)}</select></label>
-            <label>Priority<select value={priority} onChange={(event) => setPriority(event.target.value)}><option value="">All Priorities</option>{priorities.map((value) => <option key={value}>{value}</option>)}</select></label>
+            <label>VersionOne Priority<select value={priority} onChange={(event) => setPriority(event.target.value)}><option value="">All Priorities</option>{priorities.map((value) => <option key={value}>{value}</option>)}</select></label>
             <label>Owner<select value={owner} onChange={(event) => setOwner(event.target.value)}><option value="">All Owners</option>{owners.map((value) => <option key={value}>{value}</option>)}</select></label>
             <label>Planning Level<select value={planningLevelName} onChange={(event) => setPlanningLevelName(event.target.value)}><option value="">All Planning Levels</option>{planningLevels.map((value) => <option key={value}>{value}</option>)}</select></label>
             <label>Asset State<select value={assetState} onChange={(event) => setAssetState(event.target.value)}><option value="">All Asset States</option>{assetStates.map((value) => <option key={value}>{value}</option>)}</select></label>
             <span>Showing {displayedRequests.length} of {result.recordCount} Requests</span>
           </div>
+          <p className="request-priority-note">
+            Ship Priority is stored only for this browser session. {canReorder
+              ? 'Drag rows to reprioritize Requests.'
+              : 'Clear field filters and sort Ship Priority ascending to reorder.'}
+          </p>
           <div className="table-wrap">
             <table className="versionone-table request-table">
-              <thead><tr>{columns.map((column) => <th key={column.field}><button className="table-sort" type="button" onClick={() => changeSort(column.field)} aria-sort={sortField === column.field ? sortDirection : undefined}>{column.label}{sortField === column.field ? (sortDirection === 'ascending' ? ' ↑' : ' ↓') : ''}</button></th>)}</tr></thead>
-              <tbody>{displayedRequests.map((request) => <tr key={request.id} onClick={() => setSelected(request)} tabIndex={0} onKeyDown={(event) => (event.key === 'Enter' || event.key === ' ') && setSelected(request)}><td className="raid-id">{display(request.number)}</td><td className="record-title">{display(request.name)}</td><td>{display(request.planningLevelName)}</td><td>{display(request.priority)}</td><td>{display(request.status)}</td><td>{display(request.ownerName)}</td><td>{display(request.assetState)}</td></tr>)}</tbody>
+              <thead><tr><th className="drag-column"><span className="sr-only">Reorder</span></th><th><button className="table-sort" type="button" onClick={() => changeSort('shipPriority')} aria-sort={sortField === 'shipPriority' ? sortDirection : undefined}>Ship Priority{sortField === 'shipPriority' ? (sortDirection === 'ascending' ? ' ↑' : ' ↓') : ''}</button></th>{columns.map((column) => <th key={column.field}><button className="table-sort" type="button" onClick={() => changeSort(column.field)} aria-sort={sortField === column.field ? sortDirection : undefined}>{column.label}{sortField === column.field ? (sortDirection === 'ascending' ? ' ↑' : ' ↓') : ''}</button></th>)}</tr></thead>
+              <tbody>{displayedRequests.map((request) => <tr key={request.id} draggable={canReorder} className={draggedId === request.id ? 'dragging' : ''} onDragStart={() => canReorder && setDraggedId(request.id)} onDragEnd={() => setDraggedId(null)} onDragOver={(event) => canReorder && event.preventDefault()} onDrop={() => reorderRequest(request.id)} onClick={() => setSelected(request)} tabIndex={0} onKeyDown={(event) => (event.key === 'Enter' || event.key === ' ') && setSelected(request)}><td className={canReorder ? 'drag-handle' : 'drag-handle drag-disabled'} aria-hidden="true">{canReorder ? '⠿' : ''}</td><td><span className="priority priority-number">{shipPriorities.get(request.id) ?? '—'}</span></td><td className="raid-id">{display(request.number)}</td><td className="record-title">{display(request.name)}</td><td>{display(request.planningLevelName)}</td><td>{display(request.priority)}</td><td>{display(request.status)}</td><td>{display(request.ownerName)}</td><td>{display(request.assetState)}</td></tr>)}</tbody>
             </table>
             {displayedRequests.length === 0 && <p className="empty-state">{emptyMessage}</p>}
           </div>
         </>}
       </>}
 
-      {selected && <div className="modal-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setSelected(null)}><section className="modal request-details" role="dialog" aria-modal="true" aria-labelledby="request-detail-title"><button className="modal-close" type="button" aria-label="Close dialog" onClick={() => setSelected(null)}>×</button><div className="modal-heading"><p>{display(selected.number)}</p><h2 id="request-detail-title">{display(selected.name)}</h2></div><dl className="detail-grid"><div><dt>Planning Level</dt><dd>{display(selected.planningLevelName)}</dd></div><div><dt>Priority</dt><dd>{display(selected.priority)}</dd></div><div><dt>Status</dt><dd>{display(selected.status)}</dd></div><div><dt>Owner</dt><dd>{display(selected.ownerName)}</dd></div><div><dt>Asset State</dt><dd>{display(selected.assetState)}</dd></div><div><dt>OID</dt><dd>{display(selected.oid)}</dd></div><div><dt>href</dt><dd>{display(selected.href)}</dd></div></dl><p className="workspace-note">Read-only VersionOne data. ShipCommand does not edit or persist this Request.</p></section></div>}
+      {selected && <div className="modal-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setSelected(null)}><section className="modal request-details" role="dialog" aria-modal="true" aria-labelledby="request-detail-title"><button className="modal-close" type="button" aria-label="Close dialog" onClick={() => setSelected(null)}>×</button><div className="modal-heading"><p>{display(selected.number)}</p><h2 id="request-detail-title">{display(selected.name)}</h2></div><dl className="detail-grid"><div><dt>Ship Priority</dt><dd>{shipPriorities.get(selected.id) ?? '—'}</dd></div><div><dt>Planning Level</dt><dd>{display(selected.planningLevelName)}</dd></div><div><dt>VersionOne Priority</dt><dd>{display(selected.priority)}</dd></div><div><dt>Status</dt><dd>{display(selected.status)}</dd></div><div><dt>Owner</dt><dd>{display(selected.ownerName)}</dd></div><div><dt>Asset State</dt><dd>{display(selected.assetState)}</dd></div><div><dt>OID</dt><dd>{display(selected.oid)}</dd></div><div><dt>href</dt><dd>{display(selected.href)}</dd></div></dl><p className="workspace-note">VersionOne data is read-only. Ship Priority exists only in this browser session and is not written to VersionOne.</p></section></div>}
     </section>
   );
 }

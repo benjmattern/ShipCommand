@@ -25,7 +25,9 @@ Missing source values normalize to null. Stable identity preference is OID, then
 
 ## Explorer boundary
 
-The VersionOne Request Explorer is read-only and session-only. It supports search, dynamic Status/Priority/Owner/Planning Level/Asset State filters, named client-side views, sortable columns, visible/total counts, and Request details. It performs no editing, persistence, write-back, background refresh, or synchronization.
+The VersionOne Request Explorer keeps retrieved VersionOne fields read-only. It supports search, dynamic Status/VersionOne Priority/Owner/Planning Level/Asset State filters, named client-side views, sortable columns, visible/total counts, and Request details. It performs no VersionOne editing, write-back, background refresh, or synchronization.
+
+Ship Priority is a separate numeric ShipCommand overlay stored in browser `sessionStorage`, keyed by stable Request ID. Dragging a row changes the global Ship Priority order and automatically renumbers the collection. Reordering is enabled only when field filters are clear and Ship Priority is sorted ascending. Navigation and refresh preserve the order within the browser session; new Requests append to the bottom; ending the session clears it.
 
 ShipCommand's existing RAID backlog remains a separate first-class feature. Requests are an independent VersionOne source and do not replace or synchronize with RAID in this increment.
 

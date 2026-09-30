@@ -161,6 +161,30 @@ class RequestPowerShellBoundaryTests(unittest.TestCase):
 
 
 class RequestExplorerLogicTests(unittest.TestCase):
+    def test_session_order_reconciles_reorders_and_serializes(self):
+        module = (ROOT / "src" / "versionone" / "versionOneRequestOrder.ts").as_uri()
+        script = f"""
+          import assert from 'node:assert/strict';
+          import {{ moveVersionOneRequest, orderVersionOneRequests, readVersionOneRequestOrder, reconcileVersionOneRequestOrder, VERSIONONE_REQUEST_ORDER_STORAGE_KEY, writeVersionOneRequestOrder }} from '{module}';
+          const requests = [{{ id: 'b' }}, {{ id: 'a' }}, {{ id: 'c' }}];
+          assert.deepEqual(reconcileVersionOneRequestOrder(requests, ['a', 'missing', 'a']), ['a', 'b', 'c']);
+          assert.deepEqual(orderVersionOneRequests(requests, ['a', 'b', 'c']).map(item => item.id), ['a', 'b', 'c']);
+          assert.deepEqual(moveVersionOneRequest(['a', 'b', 'c'], 'c', 'a'), ['c', 'a', 'b']);
+          assert.deepEqual(moveVersionOneRequest(['a', 'b'], 'missing', 'a'), ['a', 'b']);
+          const values = new Map();
+          const storage = {{ getItem: key => values.get(key) ?? null, setItem: (key, value) => values.set(key, value) }};
+          writeVersionOneRequestOrder(storage, ['c', 'a', 'b']);
+          assert.equal(values.has(VERSIONONE_REQUEST_ORDER_STORAGE_KEY), true);
+          assert.deepEqual(readVersionOneRequestOrder(storage), ['c', 'a', 'b']);
+          values.set(VERSIONONE_REQUEST_ORDER_STORAGE_KEY, '{{bad json');
+          assert.deepEqual(readVersionOneRequestOrder(storage), []);
+        """
+        completed = subprocess.run(
+            ["node", "--experimental-strip-types", "--input-type=module", "--eval", script],
+            cwd=ROOT, capture_output=True, text=True, timeout=15, check=False,
+        )
+        self.assertEqual(0, completed.returncode, completed.stderr)
+
     def test_search_filters_options_and_natural_sort(self):
         module = (ROOT / "src" / "versionone" / "versionOneRequestFilters.ts").as_uri()
         script = f"""
@@ -211,6 +235,8 @@ class RequestExplorerLogicTests(unittest.TestCase):
         page = (ROOT / "src" / "versionone" / "VersionOneRequestsPage.tsx").read_text(encoding="utf-8")
         for expected in (
             "Showing {displayedRequests.length} of {result.recordCount} Requests",
+            "Ship Priority is stored only for this browser session.",
+            "VersionOne Priority",
             "No active intake Requests found.",
             "No release-assigned Requests found.",
             "No Requests match current filters.",
@@ -218,7 +244,7 @@ class RequestExplorerLogicTests(unittest.TestCase):
             "<dt>Asset State</dt>",
             "<dt>OID</dt>",
             "<dt>href</dt>",
-            "Read-only VersionOne data.",
+            "VersionOne data is read-only.",
         ):
             self.assertIn(expected, page)
         self.assertNotIn("Save Request", page)
