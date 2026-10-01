@@ -17,8 +17,11 @@ import { useReleaseStore } from './releases/ReleaseStore';
 import { applicationConfig } from './config';
 import { EnterpriseUnavailableNotice } from './EnterpriseUnavailableNotice';
 import { RomPage } from './rom/RomPage';
+import { SchedulePage } from './schedule/SchedulePage';
+import { loadReleases, saveReleases } from './schedule/data/releaseStorage';
+import type { Release as ScheduleRelease } from './schedule/types/release';
 
-type ActiveView = 'raid' | 'releases' | 'diagnostics' | 'versionone' | 'versionone-requests' | 'rom';
+type ActiveView = 'raid' | 'releases' | 'schedule' | 'diagnostics' | 'versionone' | 'versionone-requests' | 'rom';
 
 type ModalState =
   | { mode: 'view'; record: DataRecord }
@@ -46,7 +49,13 @@ function App() {
   const [modal, setModal] = useState<ModalState>(null);
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [loadState, setLoadState] = useState<'loading' | 'ready' | 'error'>('loading');
-  const releaseStore = useReleaseStore(records);
+  const [scheduleReleases, setScheduleReleases] = useState<ScheduleRelease[]>(loadReleases);
+  const releaseStore = useReleaseStore(records, scheduleReleases.map((release) => release.releaseNumber));
+
+  function updateScheduleReleases(next: ScheduleRelease[]) {
+    setScheduleReleases(next);
+    saveReleases(next);
+  }
 
   const filteredRecords = useMemo(
     () => selectedRelease === 'all' ? records : records.filter((record) => record.release === selectedRelease),
@@ -152,10 +161,11 @@ function App() {
   return (
     <div className="app-shell">
       <aside className="sidebar">
-        <div className="brand"><span className="brand-mark">◇</span>ShipCommand</div>
+        <div className="brand"><span className="shipcommand-mark" aria-hidden="true"><i /><i /><i /></span>ShipCommand</div>
         <nav aria-label="Primary navigation">
           <button className={`nav-item ${activeView === 'raid' ? 'active' : ''}`} type="button" onClick={() => setActiveView('raid')}>▦ <span>RAID dashboard</span></button>
           <button className={`nav-item ${activeView === 'releases' ? 'active' : ''}`} type="button" onClick={() => setActiveView('releases')}>□ <span>Releases</span></button>
+          <button className={`nav-item ${activeView === 'schedule' ? 'active' : ''}`} type="button" onClick={() => setActiveView('schedule')}>▤ <span>Schedule</span></button>
           <button className={`nav-item ${activeView === 'diagnostics' ? 'active' : ''}`} type="button" onClick={() => setActiveView('diagnostics')}>○ <span>Diagnostics</span></button>
           <button className={`nav-item ${activeView === 'versionone' ? 'active' : ''}`} type="button" onClick={() => setActiveView('versionone')}>◇ <span>VersionOne</span></button>
           <button className={`nav-item ${activeView === 'versionone-requests' ? 'active' : ''}`} type="button" onClick={() => setActiveView('versionone-requests')}>⌕ <span>VersionOne Requests</span></button>
@@ -170,11 +180,13 @@ function App() {
         <header className="page-header">
           <div>
             <p className="eyebrow">Release documentation tracking</p>
-            <h1>{activeView === 'raid' ? 'RAID dashboard' : activeView === 'releases' ? 'Release tracker' : activeView === 'diagnostics' ? 'Diagnostics' : activeView === 'versionone-requests' ? 'VersionOne Requests' : activeView === 'rom' ? 'Quick ROM' : 'VersionOne Stories'}</h1>
+            <h1>{activeView === 'raid' ? 'RAID dashboard' : activeView === 'releases' ? 'Release tracker' : activeView === 'schedule' ? 'Release schedule' : activeView === 'diagnostics' ? 'Diagnostics' : activeView === 'versionone-requests' ? 'VersionOne Requests' : activeView === 'rom' ? 'Quick ROM' : 'VersionOne Stories'}</h1>
             <p>{activeView === 'raid'
               ? 'Review and manage release risks, actions, issues, and decisions.'
               : activeView === 'releases'
                 ? 'Explore release features derived directly from the current RAID register.'
+                : activeView === 'schedule'
+                  ? 'Plan, validate, and visualize release timelines using the integrated ShipNav tools.'
                 : activeView === 'diagnostics'
                   ? 'Test connectivity from this locally running ShipCommand instance to enterprise systems.'
                   : activeView === 'versionone-requests'
@@ -270,7 +282,11 @@ function App() {
               setSelectedRelease(releaseId);
               setActiveView('raid');
             }}
+            scheduleReleases={scheduleReleases}
+            onScheduleReleasesChange={updateScheduleReleases}
           />
+        ) : activeView === 'schedule' ? (
+          <SchedulePage releases={scheduleReleases} onReleasesChange={updateScheduleReleases} />
         ) : activeView === 'diagnostics' ? (
           applicationConfig.diagnosticsEnabled ? <DiagnosticsPage /> : <EnterpriseUnavailableNotice />
         ) : activeView === 'versionone-requests' ? (

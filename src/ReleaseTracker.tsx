@@ -1,15 +1,11 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { ReleaseWorkspace } from './releases/ReleaseWorkspace';
 import { createReleaseId } from './releases/Release';
 import type { ReleaseStore } from './releases/releaseTypes';
 import { selectReleaseSummaries } from './releaseSelectors';
-import { releaseScheduleSeed } from './releaseScheduleSeed';
-import {
-  createInitialScheduleState,
-  getReleaseSchedule,
-  upsertReleaseSchedule,
-} from './releaseSchedules';
 import type { DataRecord } from './types';
+import type { Release as ScheduleRelease } from './schedule/types/release';
+import { applyReleaseSchedule, toReleaseSchedule } from './schedule/scheduleAdapter';
 
 interface ReleaseTrackerProps {
   records: DataRecord[];
@@ -18,6 +14,8 @@ interface ReleaseTrackerProps {
   onOpenRecord: (record: DataRecord) => void;
   onOpenVersionOne: () => void;
   onOpenRaid: (releaseId: string) => void;
+  scheduleReleases: ScheduleRelease[];
+  onScheduleReleasesChange: (releases: ScheduleRelease[]) => void;
 }
 
 export function ReleaseTracker({
@@ -27,37 +25,41 @@ export function ReleaseTracker({
   onOpenRecord,
   onOpenVersionOne,
   onOpenRaid,
+  scheduleReleases,
+  onScheduleReleasesChange,
 }: ReleaseTrackerProps) {
-  const [releaseSchedules, setReleaseSchedules] = useState(
-    () => createInitialScheduleState(releaseScheduleSeed),
-  );
-  const [unchangedSeedReleaseKeys, setUnchangedSeedReleaseKeys] = useState(
-    () => new Set(releaseScheduleSeed.map((schedule) => schedule.releaseId.trim().toLowerCase())),
-  );
-  const summaries = useMemo(() => selectReleaseSummaries(records), [records]);
+  const summaries = useMemo(() => {
+    const byName = new Map(selectReleaseSummaries(records).map((summary) => [summary.name.trim().toLowerCase(), summary]));
+    return releaseStore.releases.map((release) => byName.get(release.name.trim().toLowerCase()) ?? {
+      name: release.name,
+      featureCount: 0,
+      completedCount: 0,
+      remainingCount: 0,
+      progressPercent: null,
+      phaseSummary: { blockedPhases: 0, completePhases: 0, activePhases: 0, notStartedPhases: 0, noWorkPhases: 0 },
+    });
+  }, [records, releaseStore.releases]);
   const unassignedCount = records.filter((record) => !record.release?.trim()).length;
 
   if (releaseStore.selectedRelease) {
     const selectedRelease = releaseStore.selectedRelease;
+    const plannerRelease = scheduleReleases.find(
+      (release) => release.releaseNumber.trim().toLowerCase() === selectedRelease.name.trim().toLowerCase(),
+    );
     return (
       <ReleaseWorkspace
         key={selectedRelease.id}
         release={selectedRelease}
         records={records}
-        schedule={getReleaseSchedule(releaseSchedules, selectedRelease.name)}
-        isSeedSchedule={unchangedSeedReleaseKeys.has(selectedRelease.name.toLowerCase())}
+        schedule={plannerRelease ? toReleaseSchedule(plannerRelease) : undefined}
+        isSeedSchedule={false}
         onBack={() => releaseStore.selectRelease(null)}
         onUpdateRelease={(update) => releaseStore.updateRelease(selectedRelease.id, update)}
         onOpenRecord={onOpenRecord}
         onOpenVersionOne={onOpenVersionOne}
         onOpenRaid={() => onOpenRaid(selectedRelease.name)}
         onSaveSchedule={(updatedSchedule) => {
-          setReleaseSchedules((current) => upsertReleaseSchedule(current, updatedSchedule));
-          setUnchangedSeedReleaseKeys((current) => {
-            const next = new Set(current);
-            next.delete(updatedSchedule.releaseId.trim().toLowerCase());
-            return next;
-          });
+          onScheduleReleasesChange(applyReleaseSchedule(scheduleReleases, selectedRelease.name, updatedSchedule));
         }}
       />
     );

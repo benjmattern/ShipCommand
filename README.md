@@ -15,8 +15,19 @@ See the [documentation index](docs/README.md) for the product vision, architectu
 - External API or data connections will be implemented locally, but validated on a work laptop when needed
 - Excel files and exported data will be used to simulate source data during development
 
+## Integrated demo modules
+
+- RAID backlog and release workspaces
+- VersionOne Stories and Requests views
+- Quick ROM entry, session table, and Excel export
+- Schedule (integrated from ShipNav), including release CRUD, open/closed status, schedule validation, interactive Gantt editing, duplication, undo, JSON backup/import, CSV export, and printing
+
+Schedule data is stored in browser `localStorage` for the demo. Release schedule edits made from the Release workspace use the same persisted Schedule records.
+
 ## Local workflow
 
 1. Install dependencies with `npm install`
 2. Start the app with `npm run dev`
 3. Build the project with `npm run build`
+
+To refresh the committed work-computer demo on Windows, run `./scripts/build-demo.ps1`, commit the updated `demo/` folder, and then use `python .\scripts\serve-shipcommand.py` after pulling on the work computer.

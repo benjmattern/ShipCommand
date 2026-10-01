@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import type { DataRecord } from '../types';
-import { applyReleaseUpdate, createReleasesFromRecords } from './Release';
+import { applyReleaseUpdate, createReleaseId, createReleasesFromRecords, normalizeRelease } from './Release';
 import type { Release, ReleaseMetadataUpdate, ReleaseStore } from './releaseTypes';
 
 export function mergeReleaseMetadata(
@@ -20,10 +20,20 @@ export function updateReleaseMetadata(
   return { ...metadataById, [release.id]: metadata };
 }
 
-export function useReleaseStore(records: DataRecord[]): ReleaseStore {
+export function useReleaseStore(records: DataRecord[], additionalReleaseNames: string[] = []): ReleaseStore {
   const [selectedReleaseId, setSelectedReleaseId] = useState<string | null>(null);
   const [metadataById, setMetadataById] = useState<Record<string, ReleaseMetadataUpdate>>({});
-  const sourceReleases = useMemo(() => createReleasesFromRecords(records), [records]);
+  const sourceReleases = useMemo(() => {
+    const releases = createReleasesFromRecords(records);
+    const existingIds = new Set(releases.map((release) => release.id));
+    additionalReleaseNames.forEach((name) => {
+      const id = createReleaseId(name);
+      if (!name.trim() || existingIds.has(id)) return;
+      releases.push(normalizeRelease({ id, name, raidCount: 0 }));
+      existingIds.add(id);
+    });
+    return releases;
+  }, [records, additionalReleaseNames.join('\u0000')]);
   const releases = useMemo(
     () => mergeReleaseMetadata(sourceReleases, metadataById),
     [sourceReleases, metadataById],
