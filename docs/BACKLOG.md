@@ -23,14 +23,15 @@ This is a directional backlog, not a delivery commitment. Prefer validated verti
 17. **Complete:** GitHub Pages build mode, Actions deployment, `/ShipCommand/` Vite base, static environment, and graceful enterprise-unavailable behavior.
 18. **Complete:** SharePoint Connectivity Spike v1 with local HTTPS configuration, controlled read-only PowerShell test, sanitized classification, and Diagnostics card.
 19. **Complete:** VersionOne Request Ship Priority v1 with session storage, stable-ID reconciliation, drag-and-drop ordering, automatic renumbering, and no VersionOne write-back.
-20. Validate SharePoint connectivity and authentication behavior against the candidate personal-site list on the USPS work computer.
-21. Validate ServiceNow connectivity and authentication behavior on the USPS work computer.
-22. Validate full R29 and an additional release: Story and Defect statuses, teams, owners, missing fields, duplicates, asset conventions, and anomalies.
-23. Investigate governed Request-to-Release mapping using Planning Level without assuming release-like values are sufficient identity.
-24. Determine Request-to-Epic relationships and Story/Defect-to-RAID and Story-to-Feature relationship rules without assuming unverified fields.
-25. Add Release/phase boundary warnings and phase-overlap warnings.
-26. Add actual dates and schedule variance.
-27. Add one read-only testing slice from ALM data.
+20. **Complete:** Quick ROM v1 with controlled vendors, optional contract fields, searchable VersionOne Request selection, template-derived labor categories, automatic calculation, session submissions, and Excel download.
+21. Validate SharePoint connectivity and authentication behavior against the candidate personal-site list on the USPS work computer.
+22. Validate ServiceNow connectivity and authentication behavior on the USPS work computer.
+23. Validate full R29 and an additional release: Story and Defect statuses, teams, owners, missing fields, duplicates, asset conventions, and anomalies.
+24. Investigate governed Request-to-Release mapping using Planning Level without assuming release-like values are sufficient identity.
+25. Determine Request-to-Epic relationships and Story/Defect-to-RAID and Story-to-Feature relationship rules without assuming unverified fields.
+26. Add Release/phase boundary warnings and phase-overlap warnings.
+27. Add actual dates and schedule variance.
+28. Add one read-only testing slice from ALM data.
 
 ## Platform foundations to validate
 

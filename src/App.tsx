@@ -16,6 +16,9 @@ import { VersionOneRequestsPage } from './versionone/VersionOneRequestsPage';
 import { useReleaseStore } from './releases/ReleaseStore';
 import { applicationConfig } from './config';
 import { EnterpriseUnavailableNotice } from './EnterpriseUnavailableNotice';
+import { RomPage } from './rom/RomPage';
+
+type ActiveView = 'raid' | 'releases' | 'diagnostics' | 'versionone' | 'versionone-requests' | 'rom';
 
 type ModalState =
   | { mode: 'view'; record: DataRecord }
@@ -38,7 +41,7 @@ function insertAtPriority(items: DataRecord[], record: DataRecord, requestedPrio
 
 function App() {
   const [records, setRecords] = useState<DataRecord[]>([]);
-  const [activeView, setActiveView] = useState<'raid' | 'releases' | 'diagnostics' | 'versionone' | 'versionone-requests'>('raid');
+  const [activeView, setActiveView] = useState<ActiveView>('raid');
   const [selectedRelease, setSelectedRelease] = useState('all');
   const [modal, setModal] = useState<ModalState>(null);
   const [draggedId, setDraggedId] = useState<string | null>(null);
@@ -156,6 +159,7 @@ function App() {
           <button className={`nav-item ${activeView === 'diagnostics' ? 'active' : ''}`} type="button" onClick={() => setActiveView('diagnostics')}>○ <span>Diagnostics</span></button>
           <button className={`nav-item ${activeView === 'versionone' ? 'active' : ''}`} type="button" onClick={() => setActiveView('versionone')}>◇ <span>VersionOne</span></button>
           <button className={`nav-item ${activeView === 'versionone-requests' ? 'active' : ''}`} type="button" onClick={() => setActiveView('versionone-requests')}>⌕ <span>VersionOne Requests</span></button>
+          <button className={`nav-item ${activeView === 'rom' ? 'active' : ''}`} type="button" onClick={() => setActiveView('rom')}>$ <span>Quick ROM</span></button>
           <button className="nav-item" type="button" disabled>✓ <span>Approvals</span></button>
           <button className="nav-item" type="button" disabled>⚙ <span>Settings</span></button>
         </nav>
@@ -166,7 +170,7 @@ function App() {
         <header className="page-header">
           <div>
             <p className="eyebrow">Release documentation tracking</p>
-            <h1>{activeView === 'raid' ? 'RAID dashboard' : activeView === 'releases' ? 'Release tracker' : activeView === 'diagnostics' ? 'Diagnostics' : activeView === 'versionone-requests' ? 'VersionOne Requests' : 'VersionOne Stories'}</h1>
+            <h1>{activeView === 'raid' ? 'RAID dashboard' : activeView === 'releases' ? 'Release tracker' : activeView === 'diagnostics' ? 'Diagnostics' : activeView === 'versionone-requests' ? 'VersionOne Requests' : activeView === 'rom' ? 'Quick ROM' : 'VersionOne Stories'}</h1>
             <p>{activeView === 'raid'
               ? 'Review and manage release risks, actions, issues, and decisions.'
               : activeView === 'releases'
@@ -175,6 +179,8 @@ function App() {
                   ? 'Test connectivity from this locally running ShipCommand instance to enterprise systems.'
                   : activeView === 'versionone-requests'
                     ? 'Explore read-only VersionOne Requests independently from RAID and Stories.'
+                    : activeView === 'rom'
+                      ? 'Build a labor estimate, save it for the current session, and download the Quick ROM workbook.'
                     : 'Read-only stories retrieved through the ShipCommand Local Integration API.'}</p>
           </div>
           {activeView === 'raid' && <button className="primary-button" type="button" onClick={() => setModal({ mode: 'create' })}>
@@ -269,6 +275,8 @@ function App() {
           applicationConfig.diagnosticsEnabled ? <DiagnosticsPage /> : <EnterpriseUnavailableNotice />
         ) : activeView === 'versionone-requests' ? (
           applicationConfig.versionOneEnabled ? <VersionOneRequestsPage /> : <EnterpriseUnavailableNotice />
+        ) : activeView === 'rom' ? (
+          <RomPage />
         ) : (
           applicationConfig.versionOneEnabled ? <VersionOneStoriesPage /> : <EnterpriseUnavailableNotice />
         )}

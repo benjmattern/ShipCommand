@@ -12,7 +12,7 @@ Status labels distinguish current behavior from direction.
 | Change Governance | Connect production change and readiness | CRs, approvals, implementation plans | Planned |
 | Documentation and Approvals | Track required evidence and decisions | Document inventory, approvers, approval state | Planned |
 | Schedule and Milestones | Coordinate dates and dependencies | Release calendar, phase dates, milestones | Planned |
-| Financial Management | Relate estimates and funding to scope | Vendor estimates, ROMs, forecast/actual | Planned |
+| Financial Management | Relate estimates and funding to scope | Vendor estimates, ROMs, forecast/actual | Quick ROM POC implemented |
 | Integrations | Normalize authoritative enterprise data | VersionOne, ServiceNow, ALM, SharePoint, Excel | Workbook implemented; others planned |
 | Reporting and Intelligence | Derive portfolio and release insight | Readiness, blocked phases, trends, traceability | Implemented foundation / vision |
 | Administration | Manage configuration and access | Reference lists, roles, connector settings | Deferred |

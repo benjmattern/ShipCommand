@@ -81,3 +81,5 @@ Vite reports a non-failing bundle-size warning because XLSX is included in the b
 State is in memory, refresh resets changes, and no secrets or live enterprise credentials belong in the repository. Connector work should begin with safe local fixtures or approved exports.
 
 The VersionOne Requests page is an intentional exception to refresh-reset behavior: its Ship Priority order is stored in browser `sessionStorage`. It survives application navigation and refreshes in the same browser session, but is cleared when that session ends. The order is a ShipCommand-only overlay and is never written to VersionOne.
+
+Quick ROM submissions follow the same browser-session boundary. The VersionOne Request selector calls the existing read-only `/api/versionone/requests` route only when the user selects Load Requests. Excel downloads are populated client-side from `src/data/QuickROMTemplate.xlsx`; the workbook and ROM inputs are not uploaded to the Python server.

@@ -32,6 +32,7 @@ ShipCommand is the foundation of a Release Operations Platform and unified relea
 - VersionOne Request Explorer v1: fixed `Data/Request` retrieval, complete paging, normalized Request JSON, independent top-level read-only explorer, filters, sorting, and details
 - VersionOne Request Planning Level and Views v1: `Scope.Name` normalization, Planning Level and Asset State controls, Active Intake default, and all-active/release-assigned/all-accessible views
 - VersionOne Request Ship Priority v1: session-stored numeric ordering, drag-and-drop reprioritization, automatic renumbering, and explicit separation from VersionOne Priority
+- Quick ROM v1: controlled vendor selection, optional contract inputs, searchable VersionOne Request selection, template-based labor categories, automatic hour/cost calculation, session-stored submission table, and Excel download
 - Application Configuration Layer v1: centralized environment vocabulary, same-origin API resolution, enabled feature flags, and readonly application configuration with no visible behavior change
 - GitHub Pages Deployment v1: dedicated `/ShipCommand/` build mode, official Actions deployment of `dist/`, static environment detection, and graceful enterprise-unavailable behavior
 - Release Workspace Foundation v1: Release-centered workspace, sticky context header, reusable collapsible panels, and preserved Planning and Phase Progress experiences
@@ -48,6 +49,8 @@ VersionOne connectivity through controlled PowerShell default credentials is pro
 `/api/versionone/requests` independently queries the confirmed VersionOne `Request` asset type with fixed fields: Name, Number, AssetState, Status.Name, Priority.Name, Owner.Name, and Scope.Name. Scope is normalized as Planning Level while Asset State remains uninterpreted. ShipCommand intentionally retains all accessible Requests; the default Active Intake view applies the observed VersionOne Planning page predicate (`MEPT: Package Platform-4724` and Asset State `64`) on the client. Count differences from All Accessible are therefore expected filtering differences.
 
 The Request Explorer keeps VersionOne source fields read-only and does not replace or synchronize with the first-class RAID backlog. Ship Priority is a ShipCommand-owned, browser-session-only overlay keyed by stable Request ID; it is never written to VersionOne. It survives navigation and refresh during the session, appends newly retrieved Requests after the existing order, and can be changed by dragging when field filters are clear and the table is sorted by Ship Priority ascending. Release-like Planning Levels may later support Request-to-Release investigation, but no mapping is implemented. Request-to-Epic relationships also remain under investigation.
+
+Quick ROM is a client-side financial-estimation POC based on the supplied workbook template. It loads VersionOne Requests only through the existing read-only local API, calculates Expense and Capital hours against an optional blended rate, stores submissions in browser `sessionStorage`, and generates the populated Excel workbook locally. It has no approval workflow, durable database, shared table, authoritative rate source, or enterprise-system write-back.
 
 Application configuration is now isolated in plain TypeScript modules. Normal builds remain `development`, use the empty same-origin API base, and keep all existing features enabled. The dedicated GitHub Pages build resolves to `github-pages`, blocks enterprise API resolution, and retains static/client-side capabilities.
 
@@ -69,7 +72,7 @@ Release identity now comes from a shared model derived from locally known RAID a
 - No scheduled synchronization
 - No enterprise-system write-back
 - No production hosting or support model
-- Refresh resets session changes to workbook data
+- Refresh resets workbook-backed RAID and seeded schedule changes; selected browser-session features explicitly use `sessionStorage`
 - XLSX is bundled in the browser and causes a non-failing Vite chunk-size warning
 
 ## Planned capability areas

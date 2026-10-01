@@ -127,7 +127,7 @@ class ApplicationConfigurationTests(unittest.TestCase):
     def test_static_pages_notice_keeps_navigation_without_api_fetches(self):
         app = (ROOT / "src" / "App.tsx").read_text(encoding="utf-8")
         notice = (ROOT / "src" / "EnterpriseUnavailableNotice.tsx").read_text(encoding="utf-8")
-        for label in ("Diagnostics", "VersionOne", "VersionOne Requests"):
+        for label in ("Diagnostics", "VersionOne", "VersionOne Requests", "Quick ROM"):
             self.assertIn(label, app)
         self.assertIn("applicationConfig.versionOneEnabled", app)
         self.assertIn("applicationConfig.diagnosticsEnabled", app)

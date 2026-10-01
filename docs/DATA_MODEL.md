@@ -87,6 +87,14 @@ The stable `id` preference is OID, then href, then Request Number. The API retri
 
 These projections are recomputed from the in-memory RAID array and are not stored as competing mutable state.
 
+## Quick ROM submission
+
+`RomSubmission` contains a generated local ID, creation timestamp, controlled vendor, optional Task Order/CLIN/eBuy/Finance identifiers, optional hourly blended rate, project text, optional matched VersionOne Request identity, hours keyed by the 13 Quick ROM task codes, and derived Expense, Capital, total-hour, and total-cost values.
+
+The browser stores complete ROM submissions in `sessionStorage` for the current session. The project selector retrieves VersionOne Requests read-only and supports Request number/title search, but the selected label and stable Request identity are only copied into the local submission. ShipCommand performs no VersionOne write-back.
+
+Excel download populates the supplied Quick ROM template in the browser. The exported workbook retains the template task rows and formulas; no file is sent to a server.
+
 ## Persistence
 
-There is none. Browser refresh restores workbook-derived RAID records and seeded Release schedules. The current model is evidence for future design, not a finalized database schema.
+There is no durable or shared persistence. Browser refresh restores workbook-derived RAID records and seeded Release schedules. VersionOne Ship Priority and Quick ROM submissions use `sessionStorage`, so they survive navigation and refresh during the current browser session but are not shared and are cleared when the session ends. The current model is evidence for future design, not a finalized database schema.
