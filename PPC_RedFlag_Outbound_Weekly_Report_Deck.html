@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PPC RedFlag Outbound Weekly Report</title>
+    <style>
+      :root {
+        --bg: #0b1220;
+        --panel: #121b2b;
+        --panel-2: #1a2940;
+        --ink: #eaf3ff;
+        --muted: #a7b7d1;
+        --primary: #5ab2ff;
+        --accent: #61d0a5;
+        --warning: #f5b942;
+        --danger: #ff7d7d;
+        --purple: #b48cff;
+        --shadow: rgba(0, 0, 0, 0.28);
+      }
+
+      * { box-sizing: border-box; }
+
+      html, body {
+        margin: 0;
+        padding: 0;
+        background: linear-gradient(180deg, #08111d, #0d1728 35%, #0b1220);
+        color: var(--ink);
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      }
+
+      body {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .deck {
+        width: min(1400px, 96vw);
+        height: min(820px, 92vh);
+        position: relative;
+        overflow: hidden;
+        border-radius: 22px;
+        background: rgba(13, 21, 34, 0.9);
+        box-shadow: 0 30px 80px var(--shadow);
+        border: 1px solid rgba(255,255,255,0.08);
+      }
+
+      .slide {
+        position: absolute;
+        inset: 0;
+        padding: 44px 56px 40px 56px;
+        background: radial-gradient(circle at top left, rgba(90,178,255,0.12), transparent 22%),
+                    radial-gradient(circle at bottom right, rgba(97,208,165,0.10), transparent 18%),
+                    var(--bg);
+        opacity: 0;
+        pointer-events: none;
+        transform: translateX(20px);
+        transition: opacity 0.35s ease, transform 0.35s ease;
+      }
+
+      .slide.active {
+        opacity: 1;
+        pointer-events: auto;
+        transform: translateX(0);
+      }
+
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 22px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid rgba(255,255,255,0.08);
+      }
+
+      .title {
+        font-size: 2.2rem;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+      }
+
+      .subtitle {
+        color: var(--muted);
+        font-size: 0.92rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .tag {
+        background: rgba(90, 178, 255, 0.12);
+        color: var(--primary);
+        padding: 8px 12px;
+        border-radius: 999px;
+        font-size: 0.78rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .grid-2 { display: grid; grid-template-columns: 1.25fr 1fr; gap: 18px; }
+      .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+      .grid-4 { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 16px; }
+      .grid-5 { display: grid; grid-template-columns: repeat(5, minmax(0,1fr)); gap: 12px; }
+
+      .card {
+        background: linear-gradient(180deg, rgba(26,41,64,0.9), rgba(17,25,39,0.9));
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 18px;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+        padding: 18px 18px 16px;
+      }
+
+      .metric {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        min-height: 138px;
+      }
+
+      .metric .label {
+        color: var(--muted);
+        font-size: 0.78rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .metric .value {
+        margin-top: 8px;
+        font-size: clamp(1.6rem, 2vw, 2.7rem);
+        font-weight: 800;
+        line-height: 1.1;
+      }
+
+      .metric .delta {
+        font-size: 0.9rem;
+        color: var(--accent);
+        margin-top: 6px;
+      }
+
+      .callout {
+        padding: 18px 20px;
+        border-radius: 18px;
+        background: linear-gradient(135deg, rgba(90,178,255,0.12), rgba(97,208,165,0.08));
+        border: 1px solid rgba(90,178,255,0.2);
+      }
+
+      .callout strong {
+        display: block;
+        font-size: 1.1rem;
+        margin-bottom: 8px;
+      }
+
+      ul.list {
+        padding-left: 20px;
+        margin: 12px 0 0;
+        line-height: 1.55;
+        color: var(--ink);
+      }
+
+      ul.list li { margin-bottom: 10px; }
+
+      .chart {
+        margin-top: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .bar-row {
+        display: grid;
+        grid-template-columns: 130px 1fr 94px;
+        align-items: center;
+        gap: 12px;
+        font-size: 0.82rem;
+      }
+
+      .bar-track {
+        height: 18px;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.06);
+        overflow: hidden;
+        position: relative;
+      }
+
+      .bar-fill {
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, var(--primary), #89d9ff);
+      }
+
+      .bar-fill.accent { background: linear-gradient(90deg, var(--accent), #9ef2c4); }
+      .bar-fill.warning { background: linear-gradient(90deg, var(--warning), #ffd87b); }
+      .bar-fill.danger { background: linear-gradient(90deg, #ff7d7d, #ffa0a0); }
+
+      .table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 12px;
+        font-size: 0.82rem;
+      }
+
+      .table th, .table td {
+        text-align: left;
+        padding: 8px 10px;
+        border-bottom: 1px solid rgba(255,255,255,0.08);
+      }
+
+      .table th {
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-size: 0.7rem;
+      }
+
+      .pill {
+        display: inline-block;
+        padding: 5px 9px;
+        border-radius: 999px;
+        font-size: 0.7rem;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        background: rgba(97,208,165,0.12);
+        color: var(--accent);
+      }
+
+      .footer-nav {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 14px 26px 18px;
+        background: rgba(10, 17, 26, 0.92);
+        border-top: 1px solid rgba(255,255,255,0.08);
+      }
+
+      .pager {
+        font-size: 0.82rem;
+        color: var(--muted);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .nav-btn {
+        appearance: none;
+        border: 1px solid rgba(255,255,255,0.12);
+        background: rgba(255,255,255,0.02);
+        color: var(--ink);
+        border-radius: 999px;
+        padding: 10px 16px;
+        cursor: pointer;
+        font-weight: 700;
+      }
+
+      .nav-btn:hover { background: rgba(255,255,255,0.06); }
+
+      .kpi-highlight {
+        font-size: 2.3rem;
+        font-weight: 800;
+        line-height: 1.05;
+      }
+
+      .muted { color: var(--muted); }
+      .warn { color: var(--warning); }
+      .bad { color: var(--danger); }
+      .good { color: var(--accent); }
+
+      @media (max-width: 1100px) {
+        .grid-2, .grid-3, .grid-4, .grid-5 { grid-template-columns: 1fr; }
+        .deck { height: auto; min-height: 100vh; border-radius: 0; }
+        .slide { position: relative; min-height: 100vh; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="deck">
+      <section class="slide active">
+        <div class="header">
+          <div>
+            <div class="subtitle">PPC RedFlag Outbound</div>
+            <div class="title">Weekly Report FY26</div>
+          </div>
+          <div class="tag">Executive Summary</div>
+        </div>
+
+        <div class="grid-4">
+          <div class="card metric">
+            <div class="label">Active Outbound Mailers</div>
+            <div class="value">10,590</div>
+            <div class="delta">10,546 Live / 44 Pilot</div>
+          </div>
+          <div class="card metric">
+            <div class="label">Manifest Volume</div>
+            <div class="value">4.63B</div>
+            <div class="delta">Live: 4.53B</div>
+          </div>
+          <div class="card metric">
+            <div class="label">Postage Revenue</div>
+            <div class="value">$20.76B</div>
+            <div class="delta">Live: $20.08B</div>
+          </div>
+          <div class="card metric">
+            <div class="label">Additional Postage</div>
+            <div class="value">$509.8M</div>
+            <div class="delta">Offsets final cost base</div>
+          </div>
+        </div>
+
+        <div class="grid-2" style="margin-top: 18px;">
+          <div class="callout">
+            <strong>Key finding</strong>
+            Outbound volume is very large, but a measurable share of revenue is being affected by operational red flags and adjustment activity. The report indicates a material amount of exception-related revenue leakage and cost correction.
+          </div>
+          <div class="callout">
+            <strong>Major conclusion</strong>
+            The biggest risk is not raw volume; it is the concentration of exceptions in a few important categories and a small number of high-volume mailers.
+          </div>
+        </div>
+
+        <div class="grid-3" style="margin-top: 18px;">
+          <div class="card">
+            <div class="label">Exception Revenue</div>
+            <div class="kpi-highlight">$500.9M</div>
+            <div class="muted">Additional postage attributable to exception handling</div>
+          </div>
+          <div class="card">
+            <div class="label">Unmanifested Value</div>
+            <div class="kpi-highlight">$102.8M</div>
+            <div class="muted">One of the largest recurring red-flag categories</div>
+          </div>
+          <div class="card">
+            <div class="label">Census Impact</div>
+            <div class="kpi-highlight">$386.6M</div>
+            <div class="muted">Near 1.93% of total live revenue</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide">
+        <div class="header">
+          <div>
+            <div class="subtitle">PPC RedFlag Outbound</div>
+            <div class="title">Exception Mix by Category</div>
+          </div>
+          <div class="tag">Volume vs Revenue</div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="label">Adjustment type summary</div>
+            <div class="chart">
+              <div class="bar-row">
+                <div>Census</div>
+                <div class="bar-track"><div class="bar-fill" style="width: 92%"></div></div>
+                <div>78.96M</div>
+              </div>
+              <div class="bar-row">
+                <div>Unmanifested</div>
+                <div class="bar-track"><div class="bar-fill accent" style="width: 50%"></div></div>
+                <div>33.11M</div>
+              </div>
+              <div class="bar-row">
+                <div>Duplicates</div>
+                <div class="bar-track"><div class="bar-fill warning" style="width: 12%"></div></div>
+                <div>1.31M</div>
+              </div>
+              <div class="bar-row">
+                <div>QC</div>
+                <div class="bar-track"><div class="bar-fill danger" style="width: 1%"></div></div>
+                <div>0.43K</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="label">Live FY26 adjustment totals</div>
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Category</th>
+                  <th>Volume</th>
+                  <th>Revenue</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>Census</td><td>78,955,790</td><td>$386.6M</td></tr>
+                <tr><td>Unmanifested</td><td>33,108,918</td><td>$102.8M</td></tr>
+                <tr><td>Duplicates</td><td>1,308,384</td><td>$7.8M</td></tr>
+                <tr><td>Package Quality</td><td>431</td><td>$3.6M</td></tr>
+                <tr><td><strong>Total</strong></td><td><strong>113,373,523</strong></td><td><strong>$500.9M</strong></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="callout" style="margin-top: 18px;">
+          <strong>Interpretation</strong>
+          The exception profile is dominated by census and unmanifested adjustments. Duplicates matter, but they are a much smaller operational issue compared with root-cause handling and weight-based mismatches.
+        </div>
+      </section>
+
+      <section class="slide">
+        <div class="header">
+          <div>
+            <div class="subtitle">PPC RedFlag Outbound</div>
+            <div class="title">Root Cause Drivers</div>
+          </div>
+          <div class="tag">Census Summary</div>
+        </div>
+
+        <div class="card">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Reason</th>
+                <th>Census Volume</th>
+                <th>Census Revenue</th>
+                <th>% of Census Vol</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>Weight</td><td>51,751,668</td><td>$158.6M</td><td>65.5%</td></tr>
+              <tr><td>Unmanifested</td><td>15,637,826</td><td>$122.8M</td><td>19.8%</td></tr>
+              <tr><td>Dimensional:Weight</td><td>3,492,972</td><td>$58.5M</td><td>4.4%</td></tr>
+              <tr><td>Zone:Packaging</td><td>1,071,695</td><td>$6.9M</td><td>1.4%</td></tr>
+              <tr><td>Dimensional</td><td>796,501</td><td>$5.3M</td><td>1.0%</td></tr>
+              <tr><td>Used Refunded Label</td><td>958,369</td><td>$5.3M</td><td>1.2%</td></tr>
+              <tr><td><strong>Total</strong></td><td><strong>73,709,031</strong></td><td><strong>$357.4M</strong></td><td><strong>93.35%</strong></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="callout" style="margin-top: 18px;">
+          <strong>Actionable conclusion</strong>
+          The biggest operational lever is weight and packaging accuracy. More than 90% of census revenue impact is concentrated in a small set of root-cause categories, especially Weight and Unmanifested.
+        </div>
+      </section>
+
+      <section class="slide">
+        <div class="header">
+          <div>
+            <div class="subtitle">PPC RedFlag Outbound</div>
+            <div class="title">Mailer Concentration</div>
+          </div>
+          <div class="tag">Top mailers</div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="label">Top mailers by manifest volume</div>
+            <div class="chart">
+              <div class="bar-row"><div>Amazon</div><div class="bar-track"><div class="bar-fill" style="width: 100%"></div></div><div>1.46B</div></div>
+              <div class="bar-row"><div>DHL</div><div class="bar-track"><div class="bar-fill accent" style="width: 55%"></div></div><div>410.8M</div></div>
+              <div class="bar-row"><div>Shippo</div><div class="bar-track"><div class="bar-fill warning" style="width: 30%"></div></div><div>191.8M</div></div>
+              <div class="bar-row"><div>UPS</div><div class="bar-track"><div class="bar-fill danger" style="width: 32%"></div></div><div>225.8M</div></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="label">Top mailers summary</div>
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Mailer</th>
+                  <th>Volume</th>
+                  <th>Revenue</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>Amazon.com</td><td>1,460,538,372</td><td>$4.62B</td></tr>
+                <tr><td>DHL Global Mail EVS</td><td>410,849,430</td><td>$1.46B</td></tr>
+                <tr><td>Shippo</td><td>191,789,765</td><td>$1.33B</td></tr>
+                <tr><td>United Parcel Service</td><td>225,756,724</td><td>$1.14B</td></tr>
+                <tr><td>TikTok Shipping</td><td>212,970,880</td><td>$1.08B</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="callout" style="margin-top: 18px;">
+          <strong>Conclusion</strong>
+          The reporting shows material concentration risk. A limited set of mailers shapes the overall risk profile, which means targeted interventions should be prioritized instead of broad, equal treatment.
+        </div>
+      </section>
+
+      <section class="slide">
+        <div class="header">
+          <div>
+            <div class="subtitle">PPC RedFlag Outbound</div>
+            <div class="title">Mail Class Mix</div>
+          </div>
+          <div class="tag">Revenue concentration</div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="label">Mail class revenue split</div>
+            <div class="chart">
+              <div class="bar-row"><div>Ground Advantage</div><div class="bar-track"><div class="bar-fill" style="width: 91%"></div></div><div>$10.31B</div></div>
+              <div class="bar-row"><div>PS</div><div class="bar-track"><div class="bar-fill accent" style="width: 70%"></div></div><div>$7.73B</div></div>
+              <div class="bar-row"><div>Priority Mail</div><div class="bar-track"><div class="bar-fill warning" style="width: 23%"></div></div><div>$1.82B</div></div>
+              <div class="bar-row"><div>Media Mail</div><div class="bar-track"><div class="bar-fill danger" style="width: 7%"></div></div><div>$375.7M</div></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="label">Mail class impact</div>
+            <table class="table">
+              <thead>
+                <tr><th>Class</th><th>Volume</th><th>Revenue</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Ground Advantage</td><td>1,872,807,444</td><td>$10.31B</td></tr>
+                <tr><td>PS</td><td>2,318,658,830</td><td>$7.73B</td></tr>
+                <tr><td>Priority Mail</td><td>148,352,960</td><td>$1.82B</td></tr>
+                <tr><td>Media Mail</td><td>166,798,052</td><td>$375.7M</td></tr>
+                <tr><td>Total</td><td>4,517,486,099</td><td>$20.47B</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="callout" style="margin-top: 18px;">
+          <strong>Operational readout</strong>
+          Ground Advantage and PS classes dominate both manifests and revenue. They are therefore the first priority for monitoring and corrective controls.
+        </div>
+      </section>
+
+      <section class="slide">
+        <div class="header">
+          <div>
+            <div class="subtitle">PPC RedFlag Outbound</div>
+            <div class="title">Monthly Trend and Stability</div>
+          </div>
+          <div class="tag">Seasonality</div>
+        </div>
+
+        <div class="card">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Month</th>
+                <th>Manifest Volume</th>
+                <th>Revenue</th>
+                <th>Exception Rate</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>Sep</td><td>319,206,553</td><td>$1.48B</td><td>1.52%</td></tr>
+              <tr><td>Aug</td><td>392,404,940</td><td>$1.81B</td><td>2.08%</td></tr>
+              <tr><td>Jul</td><td>398,030,643</td><td>$1.86B</td><td>1.00%</td></tr>
+              <tr><td>Jun</td><td>386,481,730</td><td>$1.77B</td><td>1.11%</td></tr>
+              <tr><td>May</td><td>362,598,758</td><td>$1.63B</td><td>2.05%</td></tr>
+              <tr><td>Apr</td><td>370,111,201</td><td>$1.60B</td><td>1.52%</td></tr>
+              <tr><td>Mar</td><td>379,194,144</td><td>$1.61B</td><td>1.53%</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="callout" style="margin-top: 18px;">
+          <strong>Trend conclusion</strong>
+          The exception rate is not constant. Some periods show a sharp increase in census risk and cost impact, which suggests the business needs to track not only monthly totals but also the pattern and slope over time.
+        </div>
+      </section>
+
+      <section class="slide">
+        <div class="header">
+          <div>
+            <div class="subtitle">PPC RedFlag Outbound</div>
+            <div class="title">Assessment Backlog</div>
+          </div>
+          <div class="tag">Pending items</div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="label">Outstanding assessment load</div>
+            <div class="kpi-highlight">7,078</div>
+            <div class="muted">Pending outbound assessment records</div>
+            <div style="margin-top: 16px;">
+              <div class="pill">Assessment types</div>
+              <ul class="list">
+                <li>Unmanifested</li>
+                <li>Duplicates</li>
+                <li>Weight / Packaging / Zone issues</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="label">Likely operational use</div>
+            <ul class="list">
+              <li>Backlog aging by analyst, month, and class</li>
+              <li>Unresolved red-flag tracking by mailer</li>
+              <li>Dispute volume and amount by assessment type</li>
+              <li>Priority queueing for high-dollar exceptions</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="callout" style="margin-top: 18px;">
+          <strong>Recommendation</strong>
+          The assessment backlog should be treated as a work-in-process metric: not just how many open items exist, but which items are high-dollar and likely to influence next-period variance.
+        </div>
+      </section>
+
+      <section class="slide">
+        <div class="header">
+          <div>
+            <div class="subtitle">PPC RedFlag Outbound</div>
+            <div class="title">Executive Conclusions</div>
+          </div>
+          <div class="tag">Final View</div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="label">Bottom line</div>
+            <ul class="list">
+              <li><span class="good">Large scale:</span> FY26 live outbound volume exceeds 4.5B shipments and $20B revenue.</li>
+              <li><span class="warn">Material exception exposure:</span> additional postage totals $500.9M.</li>
+              <li><span class="warn">Largest driver:</span> census and unmanifested activity, especially weight-related causes.</li>
+              <li><span class="good">High leverage:</span> a small number of mailers and a few root causes dominate the risk profile.</li>
+              <li><span class="bad">Monitoring priority:</span> use weekly/monthly trend data to react before the risk compounds.</li>
+            </ul>
+          </div>
+
+          <div class="card">
+            <div class="label">Suggested management focus</div>
+            <ul class="list">
+              <li>Prioritize top mailers by exception value</li>
+              <li>Focus corrective action on weight and unmanifested root causes</li>
+              <li>Track exceptions as % of total revenue, not only raw dollars</li>
+              <li>Review underlying mail class mix before making process changes</li>
+              <li>Use assessment backlog trends as an early warning signal</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="callout" style="margin-top: 18px;">
+          <strong>Summary statement</strong>
+          This report supports a clear operational narrative: the business is large and growing, but the cost of red-flag issues is significant, concentrated, and actionable. The highest-value management intervention is to fix the dominant exception drivers in the largest-volume mailers and mail classes.
+        </div>
+      </section>
+
+      <div class="footer-nav">
+        <button class="nav-btn" id="prevBtn">← Previous</button>
+        <div class="pager" id="pagerText">1 / 7</div>
+        <button class="nav-btn" id="nextBtn">Next →</button>
+      </div>
+    </div>
+
+    <script>
+      const slides = Array.from(document.querySelectorAll('.slide'));
+      let current = 0;
+
+      const updatePager = () => {
+        document.getElementById('pagerText').textContent = `${current + 1} / ${slides.length}`;
+      };
+
+      const showSlide = (index) => {
+        current = (index + slides.length) % slides.length;
+        slides.forEach((s, i) => s.classList.toggle('active', i === current));
+        updatePager();
+      };
+
+      document.getElementById('nextBtn').addEventListener('click', () => showSlide(current + 1));
+      document.getElementById('prevBtn').addEventListener('click', () => showSlide(current - 1));
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') showSlide(current + 1);
+        if (e.key === 'ArrowLeft' || e.key === 'PageUp') showSlide(current - 1);
+      });
+
+      updatePager();
+    </script>
+  </body>
+</html>
